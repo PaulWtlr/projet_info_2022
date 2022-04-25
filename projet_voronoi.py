@@ -440,6 +440,9 @@ class MainWindow:
     LOCK_FLAG = False
 
     def __init__(self, master):
+        
+        
+        
         self.master = master
         self.master.title("Voronoi")
 
@@ -465,6 +468,17 @@ class MainWindow:
 
         self.btnRed = tk.Button(self.frmButton, text='Red', width=25, command=self.onClickRed)
         self.btnRed.pack(side=tk.LEFT)
+        
+        self.score_user = 0
+        self.score_user_variable = tk.StringVar(self.master, f'Score Joueur: {self.score_user}')
+        self.score_user_lbl = tk.Label(self.master, textvariable=self.score_user_variable)
+        self.score_user_lbl.pack()
+        
+        self.score_bot = 0
+        self.score_bot_variable = tk.StringVar(self.master, f'Score Bot: {self.score_bot}')
+        self.score_bot_lbl = tk.Label(self.master, textvariable=self.score_bot_variable)
+        self.score_bot_lbl.pack()
+        
 
     def onClickBlue(self):
         color = "blue"
@@ -516,9 +530,19 @@ class MainWindow:
         vp = Voronoi(points)
         vp.process()
         lines = vp.get_output()
+        
+        
+        #Actualisation du score#
 
+        self.score_user = int(vp.player.score/(10**4))
+        self.score_bot = int(vp.bot.score/(10**4))
+        self.score_user_variable.set(f'Score Joueur: {self.score_user}')
+        self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
+        
+        print(self.score_user)
         self.drawLinesOnCanvas(lines)
-
+        
+        
         self.LOCK_FLAG = False
 
     def drawLinesOnCanvas(self, lines):
