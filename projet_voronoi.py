@@ -1,6 +1,5 @@
 ##DataType
 
-#hello world
 import heapq
 import itertools
 
@@ -431,6 +430,7 @@ class Voronoi:
 
 import tkinter as tk
 
+#  je veux une liste de int pour indiquer quel joueur joue quel point
 
 class MainWindow:
     # radius of drawn points on canvas
