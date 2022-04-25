@@ -3,6 +3,9 @@
 import heapq
 import itertools
 
+import random as r 
+
+
 # définir une fonction distance ; à partir de cette fonction on peut calculer le score de chaque joueur dès lors qu'on a la liste des segments associées à chaque joueur
 class Player:
     pol = []
@@ -492,6 +495,12 @@ class MainWindow:
     def onClickClear(self):
         self.LOCK_FLAG = False
         self.w.delete(tk.ALL)
+        
+    def pc_place(self,points): #points est la liste de points déjà sur le plan on ajoute juste le point que place l'ordi
+        x=r.random()*500
+        y=r.random()*500
+        self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "black")
+        points.append((x,y))
 
     def onDoubleClick(self, event):
         if not self.LOCK_FLAG:
@@ -504,7 +513,9 @@ class MainWindow:
         for p in pObj:
             coord = self.w.coords(p)
             points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS))
-
+            
+        self.pc_place(points)
+        
         vp = Voronoi(points)
         vp.process()
         lines = vp.get_output()
@@ -516,6 +527,8 @@ class MainWindow:
     def drawLinesOnCanvas(self, lines):
         for l in lines:
             self.w.create_line(l[0], l[1], l[2], l[3], fill='blue', tags="lines")
+            
+
 
 def main():
     root = tk.Tk()
@@ -524,3 +537,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
