@@ -165,8 +165,9 @@ import math
 
 
 class Voronoi:
-    def __init__(self, points, player = Player(1)):
+    def __init__(self, points, player = Player(1), bot = Player(0)):
         self.player = player
+        self.bot = bot
         self.output = [] # liste des segments qui forment le diagramme de Voronoï
         self.arc = None  # arbre binaire pour les paraboles
         self.points = PriorityQueue() # événements ponctuels
@@ -180,7 +181,10 @@ class Voronoi:
 
         # Insertion des points en tant qu'évènements ponctuels
         for pts in points:
-            point = Point(pts[0], pts[1], player = self.player)
+            if pts[2] == 0 :
+                point = Point(pts[0], pts[1], player = self.bot)
+            else :
+                point = Point(pts[0], pts[1], player = self.player)
             self.points.push(point)
             # On agrandit la boîte si nécessaire
             if point.x < self.x0: self.x0 = point.x
@@ -403,6 +407,7 @@ class Voronoi:
                 i.s1.actu_score()
             i = i.pnext
 
+
     def print_output(self):
         it = 0
         for o in self.output:
@@ -417,7 +422,7 @@ class Voronoi:
             p0 = o.start
             p1 = o.end
             res.append((p0.x, p0.y, p1.x, p1.y))
-        print('SCORE DU JOUEUR:',self.player.score)
+        print('SCORE DU JOUEUR:',int(self.player.score/(10**4)),'SCORE DU BOT:',int(self.bot.score/(10**4)))
         return res
 
 
@@ -492,7 +497,7 @@ class MainWindow:
         x=r.random()*500
         y=r.random()*500
         self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "blue")
-        points.append((x,y))
+        points.append((x,y,0))
 
     def onDoubleClick(self, event):
         if not self.LOCK_FLAG:
@@ -504,7 +509,7 @@ class MainWindow:
         points = []
         for p in pObj:
             coord = self.w.coords(p)
-            points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS))
+            points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS,1))
 
         self.pc_place(points)
 
