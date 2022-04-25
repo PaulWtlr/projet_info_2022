@@ -499,12 +499,12 @@ class MainWindow:
     def pc_place(self,points): #points est la liste de points déjà sur le plan on ajoute juste le point que place l'ordi
         x=r.random()*500
         y=r.random()*500
-        self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "black")
+        self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "blue")
         points.append((x,y))
 
     def onDoubleClick(self, event):
         if not self.LOCK_FLAG:
-            self.w.create_oval(event.x-self.RADIUS, event.y-self.RADIUS, event.x+self.RADIUS, event.y+self.RADIUS, fill= "black")
+            self.w.create_oval(event.x-self.RADIUS, event.y-self.RADIUS, event.x+self.RADIUS, event.y+self.RADIUS, fill= "red")
 
         self.LOCK_FLAG = True
         self.w.delete("lines")
@@ -526,7 +526,7 @@ class MainWindow:
 
     def drawLinesOnCanvas(self, lines):
         for l in lines:
-            self.w.create_line(l[0], l[1], l[2], l[3], fill='blue', tags="lines")
+            self.w.create_line(l[0], l[1], l[2], l[3], fill='black', tags="lines")
             
 
 
