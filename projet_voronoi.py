@@ -3,7 +3,7 @@
 import heapq
 import itertools
 
-import random as r 
+import random as r
 
 
 # définir une fonction distance ; à partir de cette fonction on peut calculer le score de chaque joueur dès lors qu'on a la liste des segments associées à chaque joueur
@@ -92,26 +92,18 @@ class Segment:
         self.p1=p1
         self.p2=p2
 
-    def dist_s(self,p):
-        if self.end.x - self.start.x == 0 :
-            a1 = 1000000
-        else :
-            a1 = (self.end.y - self.start.y) / (self.end.x - self.start.x) #pente du segment
-        if a1 == 0 :
-            a2 = 1000000
-        else :
-            a2 =  1/a1 #pente de la droite perpendiculaire à self passant par p
-        x0 = (a1*(self.start.x) + a2*(p.x) - (p.y) - (self.start.y))*(a1 + a2) # abscisse du point d'intersection des deux droites
-        y0 = a2*(x0 - p.x) + p.y
+    def hauteur(self,p):
+        x0 = (self.p1.x + self.p2.x)/2
+        y0 = (self.p1.y + self.p2.y)/2
         p_inter = Point(x0,y0)
 
         return p.distance(p_inter)
 
     def actu_score(self):
         if self.p1 != None :
-            self.p1.player.score += self.dist_s(self.p1)*(self.start.distance(self.end))/2
+            self.p1.player.score += self.hauteur(self.p1)*(self.start.distance(self.end))/2
         if self.p2 != None :
-            self.p2.player.score += self.dist_s(self.p2)*(self.start.distance(self.end))/2
+            self.p2.player.score += self.hauteur(self.p2)*(self.start.distance(self.end))/2
 # Segment définit un segment [a,b] en 2 temps :
 # On commence par poser le point a :
 #   s=Segment(a)
@@ -495,7 +487,7 @@ class MainWindow:
     def onClickClear(self):
         self.LOCK_FLAG = False
         self.w.delete(tk.ALL)
-        
+
     def pc_place(self,points): #points est la liste de points déjà sur le plan on ajoute juste le point que place l'ordi
         x=r.random()*500
         y=r.random()*500
@@ -513,9 +505,9 @@ class MainWindow:
         for p in pObj:
             coord = self.w.coords(p)
             points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS))
-            
+
         self.pc_place(points)
-        
+
         vp = Voronoi(points)
         vp.process()
         lines = vp.get_output()
@@ -527,7 +519,7 @@ class MainWindow:
     def drawLinesOnCanvas(self, lines):
         for l in lines:
             self.w.create_line(l[0], l[1], l[2], l[3], fill='black', tags="lines")
-            
+
 
 
 def main():
