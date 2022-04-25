@@ -83,10 +83,14 @@ class Segment:
         self.p1 = p1
         self.p2 = p2
 
-    def finish(self, p):
-        if self.done: return
-        self.end = p
-        self.done = True
+    def finish(self, p, edge = False):
+        if not edge :
+            if self.done: return
+            self.end = p
+            self.done = True
+        else :
+            self.end = p
+            self.done = True
 
     def point(self,p1,p2):
         self.p1=p1
@@ -104,6 +108,36 @@ class Segment:
             self.p1.player.score += self.hauteur(self.p1)*(self.start.distance(self.end))/2
         if self.p2 != None :
             self.p2.player.score += self.hauteur(self.p2)*(self.start.distance(self.end))/2
+    
+    def inter_edge(self,p): # si on considère la boite abcd où a est le coin inférieur gauche b le coin inférieur droit alors le bords 1 est ab, 2 bc, 3 cd et 4da
+        if self.start.x - self.end.x != 0 :
+            x2 = 500
+            a = (self.end.y - self.start.y)/(self.end.x - self.start.x)
+            y2 = a*(500 - self.start.x) + self.start.y 
+            if 0 < y2 < 500 and p.x > self.p1.x :
+                return Point(x2,y2)
+            
+            x2 = 0
+            a = (self.end.y - self.start.y)/(self.end.x - self.start.x)
+            y2 = -a*(self.start.x) + self.start.y 
+            if 0 < y2 < 500 and p.x < self.p1.x :
+                return Point(x2,y2)
+            
+            y2 = 500
+            a = (self.end.y - self.start.y)/(self.end.x - self.start.x)
+            x2 = 500 / a - self.start.y/a + self.start.x
+            if 0 < x2 < 500 and p.y > self.p1.y :
+                return Point(x2,y2)
+                    
+            y2 = 0
+            a = (self.end.y - self.start.y)/(self.end.x - self.start.x)
+            x2 = - self.start.y/a + self.start.x
+            if 0 < x2 < 500 and p.y < self.p1.y :
+                return Point(x2,y2)
+        elif p1.y > 500:
+            return Point(p.x, 500)
+        else :
+            return Point(p.x, 0)
 # Segment définit un segment [a,b] en 2 temps :
 # On commence par poser le point a :
 #   s=Segment(a)
@@ -398,16 +432,229 @@ class Voronoi:
         return res
 
     def finish_edges(self):
+        
         l = self.x1 + (self.x1 - self.x0) + (self.y1 - self.y0)
         i = self.arc
         while i.pnext is not None:
             if i.s1 is not None:
                 p = self.intersection(i.p, i.pnext.p, l*2.0)
                 i.s1.finish(p)
+                p_bord = i.s1.inter_edge(p)
+                print('p_bord',p_bord.x,p_bord.y)
+                i.s1.finish(p_bord, edge = True)
                 i.s1.actu_score()
             i = i.pnext
-
-
+        
+        s_edge=[]
+        
+        def next_edge(x,y,p1,p2):
+            for s1 in self.output:
+                if x == 0 or x == 500 :
+                    if s1.start.x == x and s1.start.y > y :
+                        p = p1
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.start.y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.start.y))
+                            s_edge.append(s)
+                        p = p2
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.start.y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.start.y))
+                            s_edge.append(s)
+                            
+                    elif s1.end.x == x and s1.end.y > y :
+                        p = p1
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.end.y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.end.y))
+                            s_edge.append(s)
+                        p = p2
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.end.y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.end.y))
+                            s_edge.append(s)
+                            
+                    else :
+                        if s1.p1.y > s1.p2.y :
+                            s = Segment(Point(x,y), p1 = s1.p1)
+                        else :
+                            s = Segment(Point(x,y), p1 = s1.p2)
+                        s.finish(Point(x,500))
+                        s_edge.append(s)
+                    
+                    
+                    if s1.start.x == x and s1.start.y < y :
+                        p = p1
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.start.y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.start.y))
+                            s_edge.append(s)
+                        p = p2
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.start.y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.start.y))
+                            s_edge.append(s)
+                            
+                    elif s1.end.x == x and s1.end.y < y :
+                        p = p1
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.end.y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.end.y))
+                            s_edge.append(s)
+                        p = p2
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.end.y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(x,s1.end.y))
+                            s_edge.append(s)
+                    else :
+                        if s1.p1.y < s1.p2.y :
+                            s = Segment(Point(x,y), p1 = s1.p1)
+                        else :
+                            s = Segment(Point(x,y), p1 = s1.p2)
+                        s.finish(Point(x,0))
+                        s_edge.append(s)
+                    
+                elif y == 0 or y == 500 :
+                     
+                    if s1.start.y == y and s1.start.x > x :
+                        p = p1
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.start.x,y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.start.x,y))
+                            s_edge.append(s)
+                        p = p2
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.start.x,y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.start.x,y))
+                            s_edge.append(s)
+                            
+                    if s1.end.y == y and s1.end.x > x :
+                        p = p1
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.end.x,y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.end.x,y))
+                            s_edge.append(s)
+                        p = p2
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.end.x,y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.end.x,y))
+                            s_edge.append(s)
+                            
+                    else :
+                        if s1.p1.x < s1.p2.x :
+                            s = Segment(Point(x,y), p1 = s1.p1)
+                        else :
+                            s = Segment(Point(x,y), p1 = s1.p2)
+                        s.finish(Point(500,y))
+                        s_edge.append(s)
+                    
+                    
+                    if s1.start.y == y and s1.start.x < x :
+                        p = p1
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.start.x,y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.start.x,y))
+                            s_edge.append(s)
+                        p = p2
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.start.x,y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.start.x,y))
+                            s_edge.append(s)
+                            
+                    if s1.end.y == y and s1.end.x < x :
+                        p = p1
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.end.x,y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.end.x,y))
+                            s_edge.append(s)
+                        p = p2
+                        if s1.p1 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.end.x,y))
+                            s_edge.append(s)
+                        elif s1.p2 == p :
+                            s = Segment(Point(x,y), p1 = p)
+                            s.finish(Point(s1.end.x,y))
+                            s_edge.append(s)
+                            
+                    else :
+                        if s1.p1.x < s1.p2.x :
+                            s = Segment(Point(x,y), p1 = s1.p1)
+                        else :
+                            s = Segment(Point(x,y), p1 = s1.p2)
+                        s.finish(Point(0,y))
+                        s_edge.append(s)
+        
+        for s1 in self.output:
+            if s1.start.x == 500 or s1.start.x == 0 or s1.start.y == 500 or s1.start.y == 0 :
+                next_edge(s1.start.x,s1.start.y,s1.p1,s1.p2)
+            elif s1.end.x == 500 or s1.end.x == 0 or s1.end.y == 500 or s1.end.y == 0 :
+                next_edge(s1.end.x,s1.end.y,s1.p1,s1.p2)
+                
+        for s in s_edge :
+            s.actu_score
+        return s_edge
+        
     def print_output(self):
         it = 0
         for o in self.output:
@@ -422,7 +669,12 @@ class Voronoi:
             p0 = o.start
             p1 = o.end
             res.append((p0.x, p0.y, p1.x, p1.y))
+        for s in self.finish_edges():
+            s0 = s.start
+            s1 = s.end
+            res.append((s0.x, s0.y, s1.x, s1.y))
         print('SCORE DU JOUEUR:',int(self.player.score/(10**4)),'SCORE DU BOT:',int(self.bot.score/(10**4)))
+        
         return res
 
 
@@ -463,12 +715,6 @@ class MainWindow:
         self.btnClear = tk.Button(self.frmButton, text='Clear', width=25, command=self.onClickClear)
         self.btnClear.pack(side=tk.LEFT)
 
-        self.btnBlue = tk.Button(self.frmButton, text='Blue', width=25, command=self.onClickBlue)
-        self.btnBlue.pack(side=tk.LEFT)
-
-        self.btnRed = tk.Button(self.frmButton, text='Red', width=25, command=self.onClickRed)
-        self.btnRed.pack(side=tk.LEFT)
-        
         self.score_user = 0
         self.score_user_variable = tk.StringVar(self.master, f'Score Joueur: {self.score_user}')
         self.score_user_lbl = tk.Label(self.master, textvariable=self.score_user_variable)
@@ -479,12 +725,6 @@ class MainWindow:
         self.score_bot_lbl = tk.Label(self.master, textvariable=self.score_bot_variable)
         self.score_bot_lbl.pack()
         
-
-    def onClickBlue(self):
-        color = "blue"
-
-    def onClickRed(self):
-        color = "red"
 
     def onClickCalculate(self):
         if not self.LOCK_FLAG:
