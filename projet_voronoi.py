@@ -751,6 +751,10 @@ class MainWindow:
     def onClickClear(self):
         self.LOCK_FLAG = False
         self.w.delete(tk.ALL)
+        self.score_user = 0
+        self.score_bot = 0
+        self.score_user_variable.set(f'Score Joueur: {self.score_user}')
+        self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
 
     def pc_place(self,points): #points est la liste de points déjà sur le plan on ajoute juste le point que place l'ordi
         x=r.random()*500
@@ -784,7 +788,7 @@ class MainWindow:
         self.score_user_variable.set(f'Score Joueur: {self.score_user}')
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
         
-        print(self.score_user)
+
         self.drawLinesOnCanvas(lines)
         
         
