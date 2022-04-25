@@ -730,6 +730,8 @@ class MainWindow:
         self.score_bot_lbl = tk.Label(self.master, textvariable=self.score_bot_variable)
         self.score_bot_lbl.pack()
         
+        self.count = 0
+        
 
     def onClickCalculate(self):
         if not self.LOCK_FLAG:
@@ -755,10 +757,17 @@ class MainWindow:
         self.score_bot = 0
         self.score_user_variable.set(f'Score Joueur: {self.score_user}')
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
+        self.count = 0
 
     def pc_place(self,points): #points est la liste de points déjà sur le plan on ajoute juste le point que place l'ordi
         x=r.random()*500
         y=r.random()*500
+        self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "blue")
+        points.append((x,y,0))
+        
+    def DBC_place(self,points): #points est la liste de points déjà sur le plan on ajoute juste le point que place l'ordi
+        i=self.count
+        (x,y)=DBC_list[i]
         self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "blue")
         points.append((x,y,0))
 
@@ -767,6 +776,9 @@ class MainWindow:
             self.w.create_oval(event.x-self.RADIUS, event.y-self.RADIUS, event.x+self.RADIUS, event.y+self.RADIUS, fill= "red")
 
         self.LOCK_FLAG = True
+        #On efface les lignes du diagramme précédent
+        
+        #Calcul du diagramme de Voronoi via les points placés sur la fenêtre de jeu 
         self.w.delete("lines")
         pObj = self.w.find_all()
         points = []
@@ -774,7 +786,8 @@ class MainWindow:
             coord = self.w.coords(p)
             points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS,1))
 
-        self.pc_place(points)
+        #self.pc_place(points)
+        self.DBC_place(points)
 
         vp = Voronoi(points)
         vp.process()
@@ -782,15 +795,17 @@ class MainWindow:
         
         
         #Actualisation du score#
-
         self.score_user = int(vp.player.score/(10**4))
         self.score_bot = int(vp.bot.score/(10**4))
         self.score_user_variable.set(f'Score Joueur: {self.score_user}')
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
         
 
+        #Tracer du diagramme
         self.drawLinesOnCanvas(lines)
         
+        #Incrémentation du compteur de tour
+        self.count += 1
         
         self.LOCK_FLAG = False
 
@@ -798,7 +813,7 @@ class MainWindow:
         for l in lines:
             self.w.create_line(l[0], l[1], l[2], l[3], fill='black', tags="lines")
 
-
+DBC_list=[(350,350),(150,350),(350,150),(150,150),(250,250)]
 
 def main():
     root = tk.Tk()
