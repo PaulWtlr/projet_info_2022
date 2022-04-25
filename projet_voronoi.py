@@ -75,6 +75,8 @@ class Segment:
     start = None
     end = None
     done = False
+    score1 = False
+    score2 = False
 
     def __init__(self, p, p1=None, p2=None):
         self.start = p
@@ -104,10 +106,13 @@ class Segment:
         return p.distance(p_inter)
 
     def actu_score(self):
-        if self.p1 != None :
-            self.p1.player.score += self.hauteur(self.p1)*(self.start.distance(self.end))/2
-        if self.p2 != None :
-            self.p2.player.score += self.hauteur(self.p2)*(self.start.distance(self.end))/2
+            if self.p1 != None and not self.score1:
+                self.p1.player.score += self.hauteur(self.p1)*(self.start.distance(self.end))/2
+                self.score1 = True
+            if self.p2 != None and not self.score1:
+                self.p2.player.score += self.hauteur(self.p2)*(self.start.distance(self.end))/2
+                self.score2 = True
+            
     
     def inter_edge(self,p): # si on considère la boite abcd où a est le coin inférieur gauche b le coin inférieur droit alors le bords 1 est ab, 2 bc, 3 cd et 4da
         if self.start.x - self.end.x != 0 :
