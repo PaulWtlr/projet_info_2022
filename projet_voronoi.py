@@ -14,7 +14,7 @@ class Player:
     def __init__(self,n, pol=[],score=0 ):
         self.n = n
         self.pol = pol
-        self.score = score
+        self.score = 0
 
     def ajoute_seg(self,s):
         self.pol.append(s)
@@ -139,7 +139,7 @@ class Segment:
             x2 = - self.start.y/a + self.start.x
             if 0 < x2 < 500 and p.y < self.p1.y :
                 return Point(x2,y2)
-        elif p1.y > 500:
+        elif p.y > 500:
             return Point(p.x, 500)
         else :
             return Point(p.x, 0)
@@ -205,8 +205,8 @@ import math
 
 class Voronoi:
     def __init__(self, points, player = Player(1), bot = Player(0)):
-        self.player = player
-        self.bot = bot
+        self.player = Player(1)
+        self.bot = Player(0)
         self.output = [] # liste des segments qui forment le diagramme de Voronoï
         self.arc = None  # arbre binaire pour les paraboles
         self.points = PriorityQueue() # événements ponctuels
@@ -435,6 +435,12 @@ class Voronoi:
         px = 1.0 * (p.x**2 + (p.y-py)**2 - l**2) / (2*p.x-2*l)
         res = Point(px, py)
         return res
+    
+    def clean_output(self):
+        for s1 in self.output:
+            for s2 in self.output:
+                if s1 != s2 and [s1.start.x, s1.start.y, s1.end.x, s1.end.y] == [s2.start.x, s2.start.y, s2.end.x, s2.end.y]:
+                    self.output.remove()
 
     def finish_edges(self):
         
@@ -445,7 +451,6 @@ class Voronoi:
                 p = self.intersection(i.p, i.pnext.p, l*2.0)
                 i.s1.finish(p)
                 p_bord = i.s1.inter_edge(p)
-                print('p_bord',p_bord.x,p_bord.y)
                 i.s1.finish(p_bord, edge = True)
                 i.s1.actu_score()
             i = i.pnext
@@ -475,7 +480,7 @@ class Voronoi:
                             s.finish(Point(x,s1.start.y))
                             s_edge.append(s)
                             
-                    elif s1.end.x == x and s1.end.y > y :
+                    elif s1.done and s1.end.x == x and s1.end.y > y :
                         p = p1
                         if s1.p1 == p :
                             s = Segment(Point(x,y), p1 = p)
@@ -524,7 +529,7 @@ class Voronoi:
                             s.finish(Point(x,s1.start.y))
                             s_edge.append(s)
                             
-                    elif s1.end.x == x and s1.end.y < y :
+                    elif s1.done and s1.end.x == x and s1.end.y < y :
                         p = p1
                         if s1.p1 == p :
                             s = Segment(Point(x,y), p1 = p)
@@ -573,7 +578,7 @@ class Voronoi:
                             s.finish(Point(s1.start.x,y))
                             s_edge.append(s)
                             
-                    if s1.end.y == y and s1.end.x > x :
+                    if s1.done and s1.end.y == y and s1.end.x > x :
                         p = p1
                         if s1.p1 == p :
                             s = Segment(Point(x,y), p1 = p)
@@ -622,7 +627,7 @@ class Voronoi:
                             s.finish(Point(s1.start.x,y))
                             s_edge.append(s)
                             
-                    if s1.end.y == y and s1.end.x < x :
+                    if s1.done and s1.end.y == y and s1.end.x < x :
                         p = p1
                         if s1.p1 == p :
                             s = Segment(Point(x,y), p1 = p)
@@ -651,11 +656,16 @@ class Voronoi:
                         s_edge.append(s)
         
         for s1 in self.output:
-            if s1.start.x == 500 or s1.start.x == 0 or s1.start.y == 500 or s1.start.y == 0 :
+            print(s1.start.x)
+            print(s1.end.x)
+            if (s1.start.x or s1.start.y) in {500,0}:
+                print("hello")
                 next_edge(s1.start.x,s1.start.y,s1.p1,s1.p2)
-            elif s1.end.x == 500 or s1.end.x == 0 or s1.end.y == 500 or s1.end.y == 0 :
-                next_edge(s1.end.x,s1.end.y,s1.p1,s1.p2)
-                
+                n = 0
+                while ((s_edge[-1].start.x,s_edge[-1].start.y) or (s_edge[-1].end.x,s_edge[-1].end.y)) in [(0,0),(0,500),(500,0),(500,500)] and n <= 4:
+                     next_edge(s_edge[-1].start.x,s_edge[-1].start.y,s_edge[-1].p1,s_edge[-1].p2)
+                     n += 1
+        print(len(s_edge))
         for s in s_edge :
             s.actu_score
         return s_edge
@@ -678,7 +688,7 @@ class Voronoi:
             s0 = s.start
             s1 = s.end
             res.append((s0.x, s0.y, s1.x, s1.y))
-        print('SCORE DU JOUEUR:',int(self.player.score/(10**4)),'SCORE DU BOT:',int(self.bot.score/(10**4)))
+        print('SCORE DU JOUEUR:',int(self.player.score/(10**2)),'SCORE DU BOT:',int(self.bot.score/(10**2)))
         
         return res
 
@@ -795,8 +805,8 @@ class MainWindow:
         
         
         #Actualisation du score#
-        self.score_user = int(vp.player.score/(10**4))
-        self.score_bot = int(vp.bot.score/(10**4))
+        self.score_user = int(vp.player.score/(10**2))
+        self.score_bot = int(vp.bot.score/(10**2))
         self.score_user_variable.set(f'Score Joueur: {self.score_user}')
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
         
