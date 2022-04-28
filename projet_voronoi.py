@@ -693,17 +693,45 @@ class Voronoi:
         return res
 
 
-##Demo
+###################################################################################
+#-------------------------------PARTIE TKINTER------------------------------------#
+###################################################################################
+"""
+Dans cette partie, nous avons implémenté le jeu de Voronoï. Dans notre projet,
+chaque joueur possède 5 points à placer. Les stratégies que nous avons implémentées 
+sont les suivantes: 
+    
+1) La stratégie gloutonne ou greedy: A chaque coup, le bot joue le coup qui 
+    maximise son score. Comme le nombre de coup possible est infini nous discrétisons
+    la surface de jeu en une grille de 20x20 soit 400 coup possibles pour le bot.
+ 
+2) La stratégie MCTS (Monte-Carlo-Tree-Search): Pour chacun des 400 coups possibles
+    le bot simule les 400 réponses possibles du joueur et calcul le score moyen des 
+    réponses du joueur. Le coup choisi est alors celui pour lequel le score moyen 
+    du joueur est le plus bas
+  
+3) La stratégie DBC (Defensive Balanced Cells): Une stratégie qui ne prend pas 
+    en compte les coups du joueur mais joue selon un patterne fixe bien défini.
+    La stratégie construit un diagramme dit "équilibré" ou "balanced".
+    On dit qu'un diagramme est équilibré si toutes les cellules le sont. Une cellule
+    est dite équilibré si il existe une droite qui passe par le germe/noyau qui
+    coupe la cellule en 2 parties d'aires égales. Pour plus de détails sur cette notion
+    consulter : https://helios2.mi.parisdescartes.fr/~bouzy/publications/bouzy-acg13.pdf 
+    page 7 """
+
+
+
 
 import tkinter as tk
+import numpy as np
 
 #  je veux une liste de int pour indiquer quel joueur joue quel point
 
 class MainWindow:
-    # radius of drawn points on canvas
+    # Rayon des points affichés sur le tkinter
     RADIUS = 3
 
-    # flag to lock the canvas when drawn
+    #Variable qui permet de vérouiller la fenêtre tkinter pour tracer le diagramme
     LOCK_FLAG = False
 
     def __init__(self, master):
@@ -727,18 +755,24 @@ class MainWindow:
         self.btnCalculate = tk.Button(self.frmButton, text='Calculate', width=25, command=self.onClickCalculate)
         self.btnCalculate.pack(side=tk.LEFT)
         
+        #Bouton de choix de la stratégie de l'ordinateur#
         self.btnGreedyBot = tk.Button(self.frmButton, text='Stratégie Gloutonne', width=25, command=self.GreedyBot)
         self.btnGreedyBot.pack(side=tk.LEFT)
         
-        self.btnMTSBot = tk.Button(self.frmButton, text='Stratégie MTS', width=25, command=self.MTSBot)
-        self.btnMTSBot.pack(side=tk.LEFT)
+        self.btnMCTSBot = tk.Button(self.frmButton, text='Stratégie MCTS', width=25, command=self.MCTSBot)
+        self.btnMCTSBot.pack(side=tk.LEFT)
         
         self.btnDBCBot = tk.Button(self.frmButton, text='Stratégie DBC', width=25, command=self.DBCBot)
         self.btnDBCBot.pack(side=tk.LEFT)
-
+        
+        
+        
+        #Bouton de reset du jeu#
         self.btnClear = tk.Button(self.frmButton, text='Clear', width=25, command=self.onClickClear)
         self.btnClear.pack(side=tk.LEFT)
-
+        
+        
+        #Affichage des scores du joueurs et du bot#
         self.score_user = 0
         self.score_user_variable = tk.StringVar(self.master, f'Score Joueur: {self.score_user}')
         self.score_user_lbl = tk.Label(self.master, textvariable=self.score_user_variable)
@@ -749,19 +783,29 @@ class MainWindow:
         self.score_bot_lbl = tk.Label(self.master, textvariable=self.score_bot_variable)
         self.score_bot_lbl.pack()
         
+        
+        #Variable de compteur de tour#
         self.count = 0
         
+        #Variable de choix de stratégie#
         self.strategy = 0
     
+    
+    
+    # Pour le choix des stratégies, le bouton de chaque stratégie affecte une  
+    # valeur à la variable strategy qui vient changer la fonction de placement 
+    # de point du bot utilisé dans onDoubleClick
     def GreedyBot(self):
         self.strategy = 1
         
-    def MTSBot(self):
+    def MCTSBot(self):
         self.strategy = 2
     
     def DBCBot(self):
         self.strategy = 3
         
+    
+    #Définition du bouton Calculate#    
     def onClickCalculate(self):
         if not self.LOCK_FLAG:
             self.LOCK_FLAG = True
@@ -779,6 +823,7 @@ class MainWindow:
 
             print (lines)
 
+    #Définition du bouton Clear : Clear reset le jeu#
     def onClickClear(self):
         self.LOCK_FLAG = False
         self.w.delete(tk.ALL)
@@ -787,7 +832,11 @@ class MainWindow:
         self.score_user_variable.set(f'Score Joueur: {self.score_user}')
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
         self.count = 0
+      
         
+      
+        
+    #Donne le diagramme de Voronoi associé au point placés sur la fênetre tkinter #
     def get_vp(self):
         pObj = self.w.find_all()
         points = []
@@ -802,27 +851,51 @@ class MainWindow:
         vp = Voronoi(points)
         vp.process()
         return vp    
-
-    def pc_place(self,points): #points est la liste de points déjà sur le plan on ajoute juste le point que place l'ordi
+    
+    
+    
+    
+    #Placement du point aléatoirement #
+    def pc_place(self,points):
+        #points est la liste de points déjà sur le plan on ajoute juste le point que place le bot
         x=r.random()*500
         y=r.random()*500
         self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "blue")
         points.append((x,y,0))
+    
+    
+    
+    
+    
+    #Placement du point selon la stratégie Defensive balanced cell#
+
+    def DBC_place(self,points): 
         
-    def DBC_place(self,points): #points est la liste de points déjà sur le plan on ajoute juste le point que place l'ordi
+        DBC_list=[(350,350),(150,350),(350,150),(150,150),(250,250)] 
+        #Cette liste contient les coordonnées d'un diagramme de Voronoï équilibré à 5 points
+        
         i=self.count
         (x,y)=DBC_list[i]
         self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "blue")
         points.append((x,y,0))
         
         
+        
+        
+    #Placement du point selon la stratégie gloutonne ou greedy#
     def greedy_place(self,points):
+        
+        xy = [(i,j) for i in np.linspace(5,495,20) for j in np.linspace(5,495,20)] 
+        #Discrétisation du plan en une grille 20x20
+        
         #Initialisation du max
         self.w.create_oval(xy[0][0]-self.RADIUS, xy[0][1]-self.RADIUS, xy[0][0]+self.RADIUS, xy[0][1]+self.RADIUS, fill= "yellow", tags = 'train')
         vp=self.get_vp()
         maxi = vp.bot.score/(10**4)
         (x_play,y_play) = (0,0)
         self.w.delete("train")
+        
+        
         #Boucle de recherche du max
         for (x,y) in xy:
             self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "yellow", tags = 'train')
@@ -841,8 +914,9 @@ class MainWindow:
         self.LOCK_FLAG = True
         #On efface les lignes du diagramme précédent
         
-        #Calcul du diagramme de Voronoi via les points placés sur la fenêtre de jeu 
         self.w.delete("lines")
+        
+        #Calcul du diagramme de Voronoi via les points placés sur la fenêtre de jeu 
         pObj = self.w.find_all()
         print(pObj)
         points = []
@@ -850,19 +924,21 @@ class MainWindow:
             if self.w.itemcget(p, "fill") == "red":
                 coord = self.w.coords(p)
                 points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS,1))
-            if self.w.itemcget(p, "fill") == "blue":
+            elif self.w.itemcget(p, "fill") == "blue":
                 coord = self.w.coords(p)
                 points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS,0))
+         
                 
+        #Selection de la stratégie du bot #
         if self.strategy ==0:
             self.pc_place(points)
                 
                 
-        if self.strategy ==1:
+        elif self.strategy ==1:
             self.greedy_place(points)
             
         
-        if self.strategy ==3:
+        elif self.strategy ==3:
             
             self.DBC_place(points)
         
@@ -872,7 +948,7 @@ class MainWindow:
         lines = vp.get_output()
         
         
-        #Actualisation du score#
+        #Actualisation du score du joueur et du bot #
 
         self.score_user = vp.player.score/(10**4)
         self.score_bot = vp.bot.score/(10**4)
@@ -881,7 +957,7 @@ class MainWindow:
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
         
 
-        #Tracer du diagramme
+        #Tracer du diagramme de Voronoï
         self.drawLinesOnCanvas(lines)
         
         #Incrémentation du compteur de tour
@@ -893,10 +969,7 @@ class MainWindow:
         for l in lines:
             self.w.create_line(l[0], l[1], l[2], l[3], fill='black', tags="lines")
 
-DBC_list=[(350,350),(150,350),(350,150),(150,150),(250,250)]
 
-import numpy as np
-xy = [(i,j) for i in np.linspace(5,495,20) for j in np.linspace(5,495,20)]
 
 def main():
     root = tk.Tk()
