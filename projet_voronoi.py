@@ -791,10 +791,15 @@ class MainWindow:
         #Calcul du diagramme de Voronoi via les points placés sur la fenêtre de jeu 
         self.w.delete("lines")
         pObj = self.w.find_all()
+        print(pObj)
         points = []
         for p in pObj:
-            coord = self.w.coords(p)
-            points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS,1))
+            if self.w.itemcget(p, "fill") == "red":
+                coord = self.w.coords(p)
+                points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS,1))
+            if self.w.itemcget(p, "fill") == "blue":
+                coord = self.w.coords(p)
+                points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS,0))
 
         #self.pc_place(points)
         self.DBC_place(points)
@@ -805,8 +810,13 @@ class MainWindow:
         
         
         #Actualisation du score#
+<<<<<<< Updated upstream
         self.score_user = int(vp.player.score/(10**2))
         self.score_bot = int(vp.bot.score/(10**2))
+=======
+        self.score_user = vp.player.score/(10**4)
+        self.score_bot = vp.bot.score/(10**4)
+>>>>>>> Stashed changes
         self.score_user_variable.set(f'Score Joueur: {self.score_user}')
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
         
