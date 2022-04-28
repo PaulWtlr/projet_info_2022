@@ -726,6 +726,15 @@ class MainWindow:
 
         self.btnCalculate = tk.Button(self.frmButton, text='Calculate', width=25, command=self.onClickCalculate)
         self.btnCalculate.pack(side=tk.LEFT)
+        
+        self.btnGreedyBot = tk.Button(self.frmButton, text='Stratégie Gloutonne', width=25, command=self.GreedyBot)
+        self.btnGreedyBot.pack(side=tk.LEFT)
+        
+        self.btnMTSBot = tk.Button(self.frmButton, text='Stratégie MTS', width=25, command=self.MTSBot)
+        self.btnMTSBot.pack(side=tk.LEFT)
+        
+        self.btnDBCBot = tk.Button(self.frmButton, text='Stratégie DBC', width=25, command=self.DBCBot)
+        self.btnDBCBot.pack(side=tk.LEFT)
 
         self.btnClear = tk.Button(self.frmButton, text='Clear', width=25, command=self.onClickClear)
         self.btnClear.pack(side=tk.LEFT)
@@ -742,7 +751,17 @@ class MainWindow:
         
         self.count = 0
         
-
+        self.strategy = 0
+    
+    def GreedyBot(self):
+        self.strategy = 1
+        
+    def MTSBot(self):
+        self.strategy = 2
+    
+    def DBCBot(self):
+        self.strategy = 3
+        
     def onClickCalculate(self):
         if not self.LOCK_FLAG:
             self.LOCK_FLAG = True
@@ -768,6 +787,21 @@ class MainWindow:
         self.score_user_variable.set(f'Score Joueur: {self.score_user}')
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
         self.count = 0
+        
+    def get_vp(self):
+        pObj = self.w.find_all()
+        points = []
+        for p in pObj:
+            if self.w.itemcget(p, "fill") == "red":
+                coord = self.w.coords(p)
+                points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS,1))
+            if self.w.itemcget(p, "fill") == "blue" or self.w.itemcget(p, "fill") == "yellow":
+                coord = self.w.coords(p)
+                points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS,0))
+
+        vp = Voronoi(points)
+        vp.process()
+        return vp    
 
     def pc_place(self,points): #points est la liste de points déjà sur le plan on ajoute juste le point que place l'ordi
         x=r.random()*500
@@ -780,6 +814,25 @@ class MainWindow:
         (x,y)=DBC_list[i]
         self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "blue")
         points.append((x,y,0))
+        
+        
+    def greedy_place(self,points):
+        #Initialisation du max
+        self.w.create_oval(xy[0][0]-self.RADIUS, xy[0][1]-self.RADIUS, xy[0][0]+self.RADIUS, xy[0][1]+self.RADIUS, fill= "yellow", tags = 'train')
+        vp=self.get_vp()
+        maxi = vp.bot.score/(10**4)
+        (x_play,y_play) = (0,0)
+        self.w.delete("train")
+        #Boucle de recherche du max
+        for (x,y) in xy:
+            self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "yellow", tags = 'train')
+            vp = self.get_vp()
+            if vp.bot.score/(10**4) > maxi:
+                maxi = vp.bot.score/(10**4)
+                (x_play,y_play) = (x,y)
+            self.w.delete("train")       
+        self.w.create_oval(x_play-self.RADIUS, y_play-self.RADIUS, x_play+self.RADIUS, y_play+self.RADIUS, fill= "blue")
+        points.append((x_play,y_play,0))    
 
     def onDoubleClick(self, event):
         if not self.LOCK_FLAG:
@@ -800,9 +853,19 @@ class MainWindow:
             if self.w.itemcget(p, "fill") == "blue":
                 coord = self.w.coords(p)
                 points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS,0))
-
-        #self.pc_place(points)
-        self.DBC_place(points)
+                
+        if self.strategy ==0:
+            self.pc_place(points)
+                
+                
+        if self.strategy ==1:
+            self.greedy_place(points)
+            
+        
+        if self.strategy ==3:
+            
+            self.DBC_place(points)
+        
 
         vp = Voronoi(points)
         vp.process()
@@ -810,13 +873,10 @@ class MainWindow:
         
         
         #Actualisation du score#
-<<<<<<< Updated upstream
-        self.score_user = int(vp.player.score/(10**2))
-        self.score_bot = int(vp.bot.score/(10**2))
-=======
+
         self.score_user = vp.player.score/(10**4)
         self.score_bot = vp.bot.score/(10**4)
->>>>>>> Stashed changes
+
         self.score_user_variable.set(f'Score Joueur: {self.score_user}')
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
         
@@ -834,6 +894,9 @@ class MainWindow:
             self.w.create_line(l[0], l[1], l[2], l[3], fill='black', tags="lines")
 
 DBC_list=[(350,350),(150,350),(350,150),(150,150),(250,250)]
+
+import numpy as np
+xy = [(i,j) for i in np.linspace(5,495,20) for j in np.linspace(5,495,20)]
 
 def main():
     root = tk.Tk()
