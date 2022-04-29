@@ -1189,8 +1189,8 @@ class MainWindow:
 
         #Actualisation du score du joueur et du bot #
 
-        self.score_user = vp.player.score/(vp.bot.score + vp.player.score)
-        self.score_bot = vp.bot.score/(vp.bot.score + vp.player.score)
+        self.score_user = vp.player.score/(vp.bot.score + vp.player.score+1)
+        self.score_bot = vp.bot.score/(vp.bot.score + vp.player.score+1)
 
         self.score_user_variable.set(f'Score Joueur: {self.score_user}')
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
