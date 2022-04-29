@@ -452,7 +452,7 @@ class Voronoi:
 
                 if s2.start.x == 500 and b2 : #si un segment interromp le longement du bord on le note
                     Ls.append((s2,'s'))
-                    Ly.append(s2)
+                    Ly.append(s2.start.y)
 
                 if direction == 1 :
                     b2 = s2.end.y > s_edge.y
@@ -461,10 +461,13 @@ class Voronoi:
 
                 if s2.end.x == 500 and b2 :
                     Ls.append((s2,'e'))
-                    Ly.append(s2)
+                    Ly.append(s2.end.y)
 
             if len(Ls) > 0 :
-                s0,str = Ls[Ly.index(min(Ly))]
+                if direction == 1 :
+                    s0,str = Ls[Ly.index(min(Ly))]
+                else :
+                    s0,str = Ls[Ly.index(max(Ly))]
                 if str == 's' :
                     s_new.finish(s0.start)
                 else :
@@ -481,7 +484,7 @@ class Voronoi:
         if n == 2:
             assert(s_edge.y == 500) # bord haut du canvas
             Ls =[]
-            Ly = []
+            Lx = []
             for s2 in self.output:
                 if direction == 1 :
                     b2 = s2.start.x < s_edge.x
@@ -490,7 +493,7 @@ class Voronoi:
 
                 if s2.start.y == 500 and b2 : #si un segment interromp le longement du bord on le note
                     Ls.append((s2,'s'))
-                    Ly.append(s2)
+                    Lx.append(s2.start.x)
 
                 if direction == 1 :
                     b2 = s2.end.x < s_edge.x
@@ -499,10 +502,13 @@ class Voronoi:
 
                 if s2.end.y == 500 and b2 :
                     Ls.append((s2,'e'))
-                    Ly.append(s2)
+                    Lx.append(s2.end.x)
 
             if len(Ls) > 0 :
-                s0,str = Ls[Ly.index(min(Ly))]
+                if direction == 1:
+                    s0,str = Ls[Lx.index(max(Lx))]
+                else:
+                    s0,str = Ls[Lx.index(min(Lx))]
                 if str == 's' :
                     s_new.finish(s0.start)
                 else :
@@ -527,7 +533,7 @@ class Voronoi:
 
                 if s2.start.x == 0 and b2 : #si un segment interromp le longement du bord on le note
                     Ls.append((s2,'s'))
-                    Ly.append(s2)
+                    Ly.append(s2.start.y)
 
                 if direction == 1 :
                     b2 = s2.end.y < s_edge.y
@@ -536,10 +542,13 @@ class Voronoi:
 
                 if s2.end.x == 0 and b2 :
                     Ls.append((s2,'e'))
-                    Ly.append(s2)
+                    Ly.append(s2.end.y)
 
             if len(Ls) > 0 :
-                s0,str = Ls[Ly.index(min(Ly))]
+                if direction == 1:
+                    s0,str = Ls[Ly.index(max(Ly))]
+                else:
+                    s0,str = Ls[Ly.index(min(Ly))]
                 if str == 's' :
                     s_new.finish(s0.start)
                 else :
@@ -555,7 +564,7 @@ class Voronoi:
         if n == 4:
             assert(s_edge.y == 0) # bord bas du canvas
             Ls =[]
-            Ly = []
+            Lx = []
             for s2 in self.output:
                 if direction == 1 :
                     b2 = s2.start.x > s_edge.x
@@ -564,7 +573,7 @@ class Voronoi:
 
                 if s2.start.y == 0 and b2 : #si un segment interromp le longement du bord on le note
                     Ls.append((s2,'s'))
-                    Ly.append(s2)
+                    Lx.append(s2.start.x)
 
                 if direction == 1 :
                     b2 = s2.end.x < s_edge.x
@@ -573,10 +582,13 @@ class Voronoi:
 
                 if s2.end.y == 0 and b2 :
                     Ls.append((s2,'e'))
-                    Ly.append(s2)
+                    Lx.append(s2.end.x)
 
             if len(Ls) > 0 :
-                s0,str = Ls[Ly.index(min(Ly))]
+                if direction == 1:
+                    s0,str = Ls[Ly.index(min(Lx))]
+                else:
+                    s0,str = Ls[Ly.index(max(Lx))]
                 if str == 's' :
                     s_new.finish(s0.start)
                 else :
@@ -588,6 +600,8 @@ class Voronoi:
                 else:
                     s_new.finish(Point(0,0))
                     corner = (True,Point(0,0))
+        x8 = s_new.end.x
+        y8 = s_new.end.y
         p_center = Point(s_new.start.x/2 + s_new.end.x/2, s_new.start.y/2 + s_new.end.y/2)
         d1 = s.p1.distance(p_center)
         d2 = -1
