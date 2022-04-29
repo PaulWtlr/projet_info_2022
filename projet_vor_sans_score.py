@@ -434,31 +434,30 @@ class Voronoi:
             print(s.start.x)
             print(s.end.x)
 
-        s_edge = self.correct_seg()
-        self.output += s_edge
-        print(s_edge)
+        Ls_edge = self.correct_seg()
+        self.output += Ls_edge
 
     def next_edge(self,n,direction,s,s_edge): # fonction qui a un segment s ayant pour extremité s_edge sur le bord n du canvas trouve le segment ininterrompu qui longe c bord dans le direction : direction (=1 pour montée =0 pour descente en regardant le bord gauche)
         s_new = Segment(s_edge)
         corner = (False,Point(-1,-1))
         if n == 1:
-            assert(p.x == 500) # bord droit du canvas
+            assert(s_edge.x == 500) # bord droit du canvas
             Ls =[]
             Ly = []
             for s2 in self.output:
                 if direction == 1 : #montée
-                    b2 = s2.start.y > y
+                    b2 = s2.start.y > s_edge.y
                 else :
-                    b2 = s2.start.y < y #descente
+                    b2 = s2.start.y < s_edge.y #descente
 
                 if s2.start.x == 500 and b2 : #si un segment interromp le longement du bord on le note
                     Ls.append((s2,'s'))
                     Ly.append(s2)
 
                 if direction == 1 :
-                    b2 = s2.end.y > y
+                    b2 = s2.end.y > s_edge.y
                 else :
-                    b2 = s2.end.y < y
+                    b2 = s2.end.y < s_edge.y
 
                 if s2.end.x == 500 and b2 :
                     Ls.append((s2,'e'))
@@ -480,23 +479,23 @@ class Voronoi:
             # s_new est donc le segment qui va de s_edge au premier point qui interromp le parcours du bord depuis s_edge dans la direction : direction
 
         if n == 2:
-            assert(p.y == 500) # bord haut du canvas
+            assert(s_edge.y == 500) # bord haut du canvas
             Ls =[]
             Ly = []
             for s2 in self.output:
                 if direction == 1 :
-                    b2 = s2.start.x < x
+                    b2 = s2.start.x < s_edge.x
                 else :
-                    b2 = s2.start.x > x
+                    b2 = s2.start.x > s_edge.x
 
                 if s2.start.y == 500 and b2 : #si un segment interromp le longement du bord on le note
                     Ls.append((s2,'s'))
                     Ly.append(s2)
 
                 if direction == 1 :
-                    b2 = s2.end.x < x
+                    b2 = s2.end.x < s_edge.x
                 else :
-                    b2 = s2.end.x > x
+                    b2 = s2.end.x > s_edge.x
 
                 if s2.end.y == 500 and b2 :
                     Ls.append((s2,'e'))
@@ -517,23 +516,23 @@ class Voronoi:
                     corner = (True,Point(500,500))
 
         if n == 3:
-            assert(p.x == 0) # bord gauche du canvas
+            assert(s_edge.x == 0) # bord gauche du canvas
             Ls =[]
             Ly = []
             for s2 in self.output:
                 if direction == 1 :
-                    b2 = s2.start.y < y
+                    b2 = s2.start.y < s_edge.y
                 else :
-                    b2 = s2.start.y > y
+                    b2 = s2.start.y > s_edge.y
 
                 if s2.start.x == 0 and b2 : #si un segment interromp le longement du bord on le note
                     Ls.append((s2,'s'))
                     Ly.append(s2)
 
                 if direction == 1 :
-                    b2 = s2.end.y < y
+                    b2 = s2.end.y < s_edge.y
                 else :
-                    b2 = s2.end.y > y
+                    b2 = s2.end.y > s_edge.y
 
                 if s2.end.x == 0 and b2 :
                     Ls.append((s2,'e'))
@@ -554,23 +553,23 @@ class Voronoi:
                     corner = (True,Point(0,500))
 
         if n == 4:
-            assert(p.y == 0) # bord bas du canvas
+            assert(s_edge.y == 0) # bord bas du canvas
             Ls =[]
             Ly = []
             for s2 in self.output:
                 if direction == 1 :
-                    b2 = s2.start.x > x
+                    b2 = s2.start.x > s_edge.x
                 else :
-                    b2 = s2.start.x < x
+                    b2 = s2.start.x < s_edge.x
 
                 if s2.start.y == 0 and b2 : #si un segment interromp le longement du bord on le note
                     Ls.append((s2,'s'))
                     Ly.append(s2)
 
                 if direction == 1 :
-                    b2 = s2.end.x < x
+                    b2 = s2.end.x < s_edge.x
                 else :
-                    b2 = s2.end.x > x
+                    b2 = s2.end.x > s_edge.x
 
                 if s2.end.y == 0 and b2 :
                     Ls.append((s2,'e'))
@@ -590,27 +589,29 @@ class Voronoi:
                     s_new.finish(Point(0,0))
                     corner = (True,Point(0,0))
         p_center = Point(s_new.start.x/2 + s_new.end.x/2, s_new.start.y/2 + s_new.end.y/2)
-        d1 = s0.p1.distance(p_center)
+        d1 = s.p1.distance(p_center)
         d2 = -1
-        if p2 is not None :
-            d2 = s0.p2.distance(p_center)
+        if s.p2 is not None :
+            d2 = s.p2.distance(p_center)
         if d2 > 0 and d2 < d1 :
-            s_new.p1 = s0.p2
+            s_new.p1 = s.p2
         else :
-            s_new.p1 = s0.p1
+            s_new.p1 = s.p1
 
         return s_new,corner
 
 
     def correct_seg(self):
 
-        s_edge = []
+        Ls_edge = []
 
         for s in self.output:
+            print(s.start.x)
+            print(s.start.y)
             if s.start.x == 500 :
-                print("hello")
+                print("hellosx5")
                 s_new, b_corner = self.next_edge(1,0,s,s.start)
-                s_edge.append(s_new)
+                Ls_edge.append(s_new)
                 bool, corner = b_corner
                 k = 0
                 n0 = 1
@@ -619,12 +620,12 @@ class Voronoi:
                     n0 += dir
                     n0 = n0 % 4
                     s_new, b_corner = self.next_edge(n0,0,s,corner)
-                    s_edge.append(s_new)
+                    Ls_edge.append(s_new)
                     bool, corner = b_corner
                     k += 1
 
                 s_new, b_corner = self.next_edge(1,1,s,s.start)
-                s_edge.append(s_new)
+                Ls_edge.append(s_new)
                 bool, corner = b_corner
                 k = 0
                 n0 = 1
@@ -633,14 +634,14 @@ class Voronoi:
                     n0 += dir
                     n0 = n0 % 4
                     s_new, b_corner = self.next_edge(n0,1,s,corner)
-                    s_edge.append(s_new)
+                    Ls_edge.append(s_new)
                     bool, corner = b_corner
                     k += 1
 
             if s.start.y == 500 :
-                print("hello")
+                print("hellosy5")
                 s_new, b_corner = self.next_edge(2,0,s,s.start)
-                s_edge.append(s_new)
+                Ls_edge.append(s_new)
                 bool, corner = b_corner
                 k = 0
                 n0 = 2
@@ -649,12 +650,12 @@ class Voronoi:
                     n0 += dir
                     n0 = n0 % 4
                     s_new, b_corner = self.next_edge(n0,0,s,corner)
-                    s_edge.append(s_new)
+                    Ls_edge.append(s_new)
                     bool, corner = b_corner
                     k += 1
 
                 s_new, b_corner = self.next_edge(2,1,s,s.start)
-                s_edge.append(s_new)
+                Ls_edge.append(s_new)
                 bool, corner = b_corner
                 k = 0
                 n0 = 2
@@ -662,14 +663,14 @@ class Voronoi:
                 while bool and k < 4:
                     n0 += dir
                     s_new, b_corner = self.next_edge(n0,1,s,corner)
-                    s_edge.append(s_new)
+                    Ls_edge.append(s_new)
                     bool, corner = b_corner
                     k += 1
 
             if s.start.x == 0 :
-                print("hello")
+                print("helloSX0")
                 s_new, b_corner = self.next_edge(3,0,s,s.start)
-                s_edge.append(s_new)
+                Ls_edge.append(s_new)
                 bool, corner = b_corner
                 k = 0
                 n0 = 3
@@ -678,12 +679,12 @@ class Voronoi:
                     n0 += dir
                     n0 = n0 % 4
                     s_new, b_corner = self.next_edge(n0,0,s,corner)
-                    s_edge.append(s_new)
+                    Ls_edge.append(s_new)
                     bool, corner = b_corner
                     k += 1
 
                 s_new, b_corner = self.next_edge(3,1,s,s.start)
-                s_edge.append(s_new)
+                Ls_edge.append(s_new)
                 bool, corner = b_corner
                 k = 0
                 n0 = 3
@@ -691,14 +692,14 @@ class Voronoi:
                 while bool and k < 4:
                     n0 += dir
                     s_new, b_corner = self.next_edge(n0,1,s,corner)
-                    s_edge.append(s_new)
+                    Ls_edge.append(s_new)
                     bool, corner = b_corner
                     k += 1
 
             if s.start.y == 0 :
-                print("hello")
+                print("helloSY0")
                 s_new, b_corner = self.next_edge(4,0,s,s.start)
-                s_edge.append(s_new)
+                Ls_edge.append(s_new)
                 bool, corner = b_corner
                 k = 0
                 n0 = 4
@@ -707,12 +708,12 @@ class Voronoi:
                     n0 += dir
                     n0 = n0 % 4
                     s_new, b_corner = self.next_edge(n0,0,s,corner)
-                    s_edge.append(s_new)
+                    Ls_edge.append(s_new)
                     bool, corner = b_corner
                     k += 1
 
                 s_new, b_corner = self.next_edge(4,1,s,s.start)
-                s_edge.append(s_new)
+                Ls_edge.append(s_new)
                 bool, corner = b_corner
                 k = 0
                 n0 = 4
@@ -720,10 +721,129 @@ class Voronoi:
                 while bool and k < 4:
                     n0 += dir
                     s_new, b_corner = self.next_edge(n0,1,s,corner)
-                    s_edge.append(s_new)
+                    Ls_edge.append(s_new)
                     bool, corner = b_corner
                     k += 1
-        return s_edge
+
+        #on fait pareil avec les s.end
+
+            if s.end.x == 500 :
+                print("helloEX5")
+                s_new, b_corner = self.next_edge(1,0,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 1
+                dir = -1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    s_new, b_corner = self.next_edge(n0,0,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+                s_new, b_corner = self.next_edge(1,1,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 1
+                dir = 1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    s_new, b_corner = self.next_edge(n0,1,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+            if s.end.y == 500 :
+                print("helloEY5")
+                s_new, b_corner = self.next_edge(2,0,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 2
+                dir = -1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    s_new, b_corner = self.next_edge(n0,0,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+                s_new, b_corner = self.next_edge(2,1,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 2
+                dir = 1
+                while bool and k < 4:
+                    n0 += dir
+                    s_new, b_corner = self.next_edge(n0,1,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+            if s.end.x == 0 :
+                print("helloEX0")
+                s_new, b_corner = self.next_edge(3,0,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 3
+                dir = -1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    s_new, b_corner = self.next_edge(n0,0,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+                s_new, b_corner = self.next_edge(3,1,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 3
+                dir = 1
+                while bool and k < 4:
+                    n0 += dir
+                    s_new, b_corner = self.next_edge(n0,1,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+            if s.end.y == 0 :
+                print("helloEY0")
+                s_new, b_corner = self.next_edge(4,0,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 4
+                dir = -1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    s_new, b_corner = self.next_edge(n0,0,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+                s_new, b_corner = self.next_edge(4,1,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 4
+                dir = 1
+                while bool and k < 4:
+                    n0 += dir
+                    s_new, b_corner = self.next_edge(n0,1,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+        return Ls_edge
 
 
     def print_output(self):
