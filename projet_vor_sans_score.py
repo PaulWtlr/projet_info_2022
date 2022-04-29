@@ -437,6 +437,9 @@ class Voronoi:
         Ls_edge = self.correct_seg()
         self.output += Ls_edge
 
+        self.clean_output()
+
+
     def next_edge(self,n,direction,s,s_edge): # fonction qui a un segment s ayant pour extremité s_edge sur le bord n du canvas trouve le segment ininterrompu qui longe c bord dans le direction : direction (=1 pour montée =0 pour descente en regardant le bord gauche)
         s_new = Segment(s_edge)
         corner = (False,Point(-1,-1))
@@ -623,7 +626,6 @@ class Voronoi:
             print(s.start.x)
             print(s.start.y)
             if s.start.x == 500 :
-                print("hellosx5")
                 s_new, b_corner = self.next_edge(1,0,s,s.start)
                 Ls_edge.append(s_new)
                 bool, corner = b_corner
@@ -691,7 +693,6 @@ class Voronoi:
                     k += 1
 
             if s.start.x == 0 :
-                print("helloSX0")
                 s_new, b_corner = self.next_edge(3,0,s,s.start)
                 Ls_edge.append(s_new)
                 bool, corner = b_corner
@@ -725,7 +726,6 @@ class Voronoi:
                     k += 1
 
             if s.start.y == 0 :
-                print("helloSY0")
                 s_new, b_corner = self.next_edge(4,0,s,s.start)
                 Ls_edge.append(s_new)
                 bool, corner = b_corner
@@ -758,7 +758,6 @@ class Voronoi:
         #on fait pareil avec les s.end
 
             if s.end.x == 500 :
-                print("helloEX5")
                 s_new, b_corner = self.next_edge(1,0,s,s.end)
                 Ls_edge.append(s_new)
                 bool, corner = b_corner
@@ -792,7 +791,6 @@ class Voronoi:
                     k += 1
 
             if s.end.y == 500 :
-                print("helloEY5")
                 s_new, b_corner = self.next_edge(2,0,s,s.end)
                 Ls_edge.append(s_new)
                 bool, corner = b_corner
@@ -816,7 +814,6 @@ class Voronoi:
                 n0 = 2
                 dir = 1
                 while bool and k < 4:
-                    print("boucle")
                     n0 += dir
                     n0 = n0 % 4
                     if n0 == 0 :
@@ -827,7 +824,6 @@ class Voronoi:
                     k += 1
 
             if s.end.x == 0 :
-                print("helloEX0")
                 s_new, b_corner = self.next_edge(3,0,s,s.end)
                 Ls_edge.append(s_new)
                 bool, corner = b_corner
@@ -835,7 +831,6 @@ class Voronoi:
                 n0 = 3
                 dir = -1
                 while bool and k < 4:
-                    print("boucle-")
                     n0 += dir
                     n0 = n0 % 4
                     if n0 == 0 :
@@ -852,7 +847,6 @@ class Voronoi:
                 n0 = 3
                 dir = 1
                 while bool and k < 4:
-                    print("boucle")
                     n0 += dir
                     n0 = n0 % 4
                     if n0 == 0 :
@@ -863,7 +857,6 @@ class Voronoi:
                     k += 1
 
             if s.end.y == 0 :
-                print("helloEY0")
                 s_new, b_corner = self.next_edge(4,0,s,s.end)
                 Ls_edge.append(s_new)
                 bool, corner = b_corner
@@ -871,7 +864,6 @@ class Voronoi:
                 n0 = 4
                 dir = -1
                 while bool and k < 4:
-                    print("boucle-")
                     n0 += dir
                     n0 = n0 % 4
                     if n0 == 0 :
@@ -888,7 +880,6 @@ class Voronoi:
                 n0 = 4
                 dir = 1
                 while bool and k < 4:
-                    print("boucle")
                     n0 += dir
                     n0 = n0 % 4
                     if n0 == 0 :
