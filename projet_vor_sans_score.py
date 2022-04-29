@@ -92,10 +92,18 @@ class Segment:
         self.p2=p2
 
     def hauteur(self,p):
-        x0 = (self.p1.x + self.p2.x)/2
-        y0 = (self.p1.y + self.p2.y)/2
+        if self.end.x - self.start.x == 0 :
+            a1 = 1000000
+        else :
+            a1 = (self.end.y - self.start.y) / (self.end.x - self.start.x) #pente du segment
+        if a1 == 0 :
+            a2 = 1000000
+        else :
+            a2 =  1/a1 #pente de la droite perpendiculaire à self passant par p
+        x0 = (a1*(self.start.x) + a2*(p.x) - (p.y) - (self.start.y))*(a1 + a2) # abscisse du point d'intersection des deux droites
+        y0 = a2*(x0 - p.x) + p.y
         p_inter = Point(x0,y0)
-        print(p.distance(p_inter))
+
         return p.distance(p_inter)
 
     def actu_score(self):
@@ -438,6 +446,8 @@ class Voronoi:
         self.output += Ls_edge
 
         self.clean_output()
+        for s in self.output:
+            s.actu_score()
 
 
     def next_edge(self,n,direction,s,s_edge): # fonction qui a un segment s ayant pour extremité s_edge sur le bord n du canvas trouve le segment ininterrompu qui longe c bord dans le direction : direction (=1 pour montée =0 pour descente en regardant le bord gauche)
