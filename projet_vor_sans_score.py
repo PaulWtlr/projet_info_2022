@@ -773,6 +773,9 @@ class Voronoi:
                 dir = 1
                 while bool and k < 4:
                     n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,1,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
