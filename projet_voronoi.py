@@ -656,8 +656,6 @@ class Voronoi:
                         s_edge.append(s)
         
         for s1 in self.output:
-            print(s1.start.x)
-            print(s1.end.x)
             if (s1.start.x or s1.start.y) in {500,0}:
                 print("hello")
                 next_edge(s1.start.x,s1.start.y,s1.p1,s1.p2)
@@ -688,7 +686,7 @@ class Voronoi:
             s0 = s.start
             s1 = s.end
             res.append((s0.x, s0.y, s1.x, s1.y))
-        print('SCORE DU JOUEUR:',int(self.player.score/(10**2)),'SCORE DU BOT:',int(self.bot.score/(10**2)))
+        print('SCORE DU JOUEUR:',int(self.player.score),'SCORE DU BOT:',int(self.bot.score))
         
         return res
 
