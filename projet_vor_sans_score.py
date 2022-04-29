@@ -237,9 +237,9 @@ class Voronoi:
                     point0 = (s.start.x, s.start.y)
                     point1 = (s.end.x, s.end.y)
                     if point0 not in pol:
-                        pol.append(p0)
+                        pol.append(point0)
                     if point1 not in pol:
-                        pol.append(p1)
+                        pol.append(point1)
             if len(pol) > 0:
                 p.player.add_pol(pol)
 
@@ -483,12 +483,12 @@ class Voronoi:
                     Ls.append((s2,'s'))
                     Ly.append(s2.start.y)
 
-                if direction == 1 :
+                if direction == 1 and s2.end != None:
                     b2 = s2.end.y > s_edge.y
-                else :
+                elif s2.end != None :
                     b2 = s2.end.y < s_edge.y
 
-                if s2.end.x == 500 and b2 :
+                if s2.end != None and s2.end.x == 500 and b2 :
                     Ls.append((s2,'e'))
                     Ly.append(s2.end.y)
 
@@ -524,12 +524,12 @@ class Voronoi:
                     Ls.append((s2,'s'))
                     Lx.append(s2.start.x)
 
-                if direction == 1 :
+                if direction == 1 and s2.end != None :
                     b2 = s2.end.x < s_edge.x
-                else :
+                elif s2.end != None :
                     b2 = s2.end.x > s_edge.x
 
-                if s2.end.y == 500 and b2 :
+                if s2.end != None and s2.end.y == 500 and b2 :
                     Ls.append((s2,'e'))
                     Lx.append(s2.end.x)
 
@@ -564,12 +564,12 @@ class Voronoi:
                     Ls.append((s2,'s'))
                     Ly.append(s2.start.y)
 
-                if direction == 1 :
+                if direction == 1 and s2.end != None :
                     b2 = s2.end.y < s_edge.y
-                else :
+                elif s2.end != None :
                     b2 = s2.end.y > s_edge.y
 
-                if s2.end.x == 0 and b2 :
+                if s2.end != None and s2.end.x == 0 and b2 :
                     Ls.append((s2,'e'))
                     Ly.append(s2.end.y)
 
@@ -604,12 +604,12 @@ class Voronoi:
                     Ls.append((s2,'s'))
                     Lx.append(s2.start.x)
 
-                if direction == 1 :
+                if direction == 1 and s2.end != None :
                     b2 = s2.end.x < s_edge.x
                 else :
                     b2 = s2.end.x > s_edge.x
 
-                if s2.end.y == 0 and b2 :
+                if s2.end != None and s2.end.y == 0 and b2 :
                     Ls.append((s2,'e'))
                     Lx.append(s2.end.x)
 
