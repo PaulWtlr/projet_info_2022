@@ -102,15 +102,17 @@ class Segment:
         x0 = (self.p1.x + self.p2.x)/2
         y0 = (self.p1.y + self.p2.y)/2
         p_inter = Point(x0,y0)
-
+        print(p.distance(p_inter))
         return p.distance(p_inter)
 
     def actu_score(self):
             if self.p1 != None and not self.score1:
                 self.p1.player.score += self.hauteur(self.p1)*(self.start.distance(self.end))/2
+                print(self.p1.player.score)
                 self.score1 = True
             if self.p2 != None and not self.score1:
                 self.p2.player.score += self.hauteur(self.p2)*(self.start.distance(self.end))/2
+                print(self.p2.player.score)
                 self.score2 = True
             
     
@@ -220,6 +222,7 @@ class Voronoi:
 
         # Insertion des points en tant qu'évènements ponctuels
         for pts in points:
+            print(pts[2])
             if pts[2] == 0 :
                 point = Point(pts[0], pts[1], player = self.bot)
             else :
@@ -285,10 +288,8 @@ class Voronoi:
             # finish the edges before and after a
             if a.s0 is not None:
                 a.s0.finish(e.p)
-                a.s0.actu_score()
             if a.s1 is not None:
                 a.s1.finish(e.p)
-                a.s1.actu_score()
             # recheck circle events on either side of p
             if a.pprev is not None: self.check_circle_event(a.pprev, e.x)
             if a.pnext is not None: self.check_circle_event(a.pnext, e.x)
@@ -309,7 +310,7 @@ class Voronoi:
                         i.pnext.pprev = Arc(i.p, player = i.p.player ,a = i, b = i.pnext)
                         i.pnext = i.pnext.pprev
                     else:
-                        i.pnext = Arc(i.p, i)
+                        i.pnext = Arc(i.p, player = i.p.player ,a = i)
                     i.pnext.s1 = i.s1
 
                     # add p between i and i.pnext
@@ -340,7 +341,7 @@ class Voronoi:
             i = self.arc
             while i.pnext is not None:
                 i = i.pnext
-            i.pnext = Arc(p, i)
+            i.pnext = Arc(p, player = p.player, a = i)
 
             # insert new segment between p and i
             x = self.x0
@@ -452,7 +453,6 @@ class Voronoi:
                 i.s1.finish(p)
                 p_bord = i.s1.inter_edge(p)
                 i.s1.finish(p_bord, edge = True)
-                i.s1.actu_score()
             i = i.pnext
         
         s_edge=[]
@@ -663,9 +663,10 @@ class Voronoi:
                 while ((s_edge[-1].start.x,s_edge[-1].start.y) or (s_edge[-1].end.x,s_edge[-1].end.y)) in [(0,0),(0,500),(500,0),(500,500)] and n <= 4:
                      next_edge(s_edge[-1].start.x,s_edge[-1].start.y,s_edge[-1].p1,s_edge[-1].p2)
                      n += 1
-        print(len(s_edge))
+        for s in self.output:
+            print(s.start.x)
         for s in s_edge :
-            s.actu_score
+            s.actu_score()
         return s_edge
         
     def print_output(self):
@@ -819,7 +820,6 @@ class MainWindow:
             lines = vp.get_output()
             self.drawLinesOnCanvas(lines)
 
-            print (lines)
 
     #Définition du bouton Clear : Clear reset le jeu#
     def onClickClear(self):
@@ -916,7 +916,6 @@ class MainWindow:
         
         #Calcul du diagramme de Voronoi via les points placés sur la fenêtre de jeu 
         pObj = self.w.find_all()
-        print(pObj)
         points = []
         for p in pObj:
             if self.w.itemcget(p, "fill") == "red":
