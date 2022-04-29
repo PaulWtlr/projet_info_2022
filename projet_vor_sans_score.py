@@ -7,16 +7,16 @@ import itertools
 import random
 
 class Player:
-    pol = []
+    polygons = []
     n = None
 
-    def __init__(self,n, pol=[],score=0 ):
+    def __init__(self,n, polygons=[],score=0 ):
         self.n = n
-        self.pol = pol
+        self.polygons = polygons
         self.score = 0
 
-    def add_seg(self,s):
-        self.pol.append(s)
+    def add_pol(self,pol):
+        self.polygons.append(pol)
 
 class Point:
     x = 0.0
@@ -199,6 +199,7 @@ class Voronoi:
         self.output = [] # liste des segments qui forment le diagramme de Voronoï
         self.arc = None  # arbre binaire pour les paraboles
         self.points = PriorityQueue() # événements ponctuels
+        self.points_save = []
         self.event = PriorityQueue() # événements circulaires
 
         # On pose la boîte dans laquelle on trace la diagramme (bounding box)
@@ -213,6 +214,7 @@ class Voronoi:
                 point = Point(pts[0], pts[1], player = self.bot)
             else :
                 point = Point(pts[0], pts[1], player = self.player)
+            self.points_save.append(point)
             self.points.push(point)
             # On agrandit la boîte si nécessaire
             if point.x < self.x0: self.x0 = point.x
@@ -226,6 +228,22 @@ class Voronoi:
         self.x1 = self.x1 + dx
         self.y0 = self.y0 - dy
         self.y1 = self.y1 + dy
+
+    def upd_pol(self,points):
+        for p in points:
+            pol=[]
+            for s in self.output:
+                if s.p1 is not None and (s.p1 == p or s.p2 == p):
+                    point0 = (s.start.x, s.start.y)
+                    point1 = (s.end.x, s.end.y)
+                    if point0 not in pol:
+                        pol.append(p0)
+                    if point1 not in pol:
+                        pol.append(p1)
+            if len(pol) > 0:
+                p.player.add_pol(pol)
+
+
 
     def process(self):
         while not self.points.empty():
@@ -444,6 +462,8 @@ class Voronoi:
         self.clean_output()
         for s in self.output:
             s.actu_score()
+
+        self.upd_pol(self.points_save)
 
 
     def next_edge(self,n,direction,s,s_edge): # fonction qui a un segment s ayant pour extremité s_edge sur le bord n du canvas trouve le segment ininterrompu qui longe c bord dans le direction : direction (=1 pour montée =0 pour descente en regardant le bord gauche)
