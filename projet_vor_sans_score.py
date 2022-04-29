@@ -109,11 +109,9 @@ class Segment:
     def actu_score(self):
             if self.p1 != None and not self.score1:
                 self.p1.player.score += self.hauteur(self.p1)*(self.start.distance(self.end))/2
-                print(self.p1.player.score)
                 self.score1 = True
             if self.p2 != None and not self.score1:
                 self.p2.player.score += self.hauteur(self.p2)*(self.start.distance(self.end))/2
-                print(self.p2.player.score)
                 self.score2 = True
 
     def p_edge(self,p):
@@ -439,8 +437,6 @@ class Voronoi:
         self.clean_output()
         for s in self.output :
             s.inter_edge()
-            print(s.start.x)
-            print(s.end.x)
 
         Ls_edge = self.correct_seg()
         self.output += Ls_edge
@@ -633,8 +629,6 @@ class Voronoi:
         Ls_edge = []
 
         for s in self.output:
-            print(s.start.x)
-            print(s.start.y)
             if s.start.x == 500 :
                 s_new, b_corner = self.next_edge(1,0,s,s.start)
                 Ls_edge.append(s_new)
@@ -669,7 +663,6 @@ class Voronoi:
                     k += 1
 
             if s.start.y == 500 :
-                print("hellosy5")
                 s_new, b_corner = self.next_edge(2,0,s,s.start)
                 Ls_edge.append(s_new)
                 bool, corner = b_corner
@@ -1173,8 +1166,8 @@ class MainWindow:
 
         #Actualisation du score du joueur et du bot #
 
-        self.score_user = vp.player.score/(10**4)
-        self.score_bot = vp.bot.score/(10**4)
+        self.score_user = vp.player.score/(vp.bot.score + vp.player.score)
+        self.score_bot = vp.bot.score/(vp.bot.score + vp.player.score)
 
         self.score_user_variable.set(f'Score Joueur: {self.score_user}')
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
