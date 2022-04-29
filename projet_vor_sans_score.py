@@ -586,9 +586,9 @@ class Voronoi:
 
             if len(Ls) > 0 :
                 if direction == 1:
-                    s0,str = Ls[Ly.index(min(Lx))]
+                    s0,str = Ls[Lx.index(min(Lx))]
                 else:
-                    s0,str = Ls[Ly.index(max(Lx))]
+                    s0,str = Ls[Lx.index(max(Lx))]
                 if str == 's' :
                     s_new.finish(s0.start)
                 else :
@@ -633,6 +633,8 @@ class Voronoi:
                 while bool and k < 4:
                     n0 += dir
                     n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,0,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
@@ -647,6 +649,8 @@ class Voronoi:
                 while bool and k < 4:
                     n0 += dir
                     n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,1,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
@@ -663,6 +667,8 @@ class Voronoi:
                 while bool and k < 4:
                     n0 += dir
                     n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,0,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
@@ -676,6 +682,9 @@ class Voronoi:
                 dir = 1
                 while bool and k < 4:
                     n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,1,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
@@ -692,6 +701,8 @@ class Voronoi:
                 while bool and k < 4:
                     n0 += dir
                     n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,0,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
@@ -705,6 +716,9 @@ class Voronoi:
                 dir = 1
                 while bool and k < 4:
                     n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,1,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
@@ -721,6 +735,8 @@ class Voronoi:
                 while bool and k < 4:
                     n0 += dir
                     n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,0,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
@@ -752,6 +768,8 @@ class Voronoi:
                 while bool and k < 4:
                     n0 += dir
                     n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,0,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
@@ -766,6 +784,8 @@ class Voronoi:
                 while bool and k < 4:
                     n0 += dir
                     n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,1,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
@@ -782,6 +802,8 @@ class Voronoi:
                 while bool and k < 4:
                     n0 += dir
                     n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,0,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
@@ -794,7 +816,11 @@ class Voronoi:
                 n0 = 2
                 dir = 1
                 while bool and k < 4:
+                    print("boucle")
                     n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,1,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
@@ -809,8 +835,11 @@ class Voronoi:
                 n0 = 3
                 dir = -1
                 while bool and k < 4:
+                    print("boucle-")
                     n0 += dir
                     n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,0,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
@@ -823,7 +852,11 @@ class Voronoi:
                 n0 = 3
                 dir = 1
                 while bool and k < 4:
+                    print("boucle")
                     n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,1,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
@@ -838,8 +871,11 @@ class Voronoi:
                 n0 = 4
                 dir = -1
                 while bool and k < 4:
+                    print("boucle-")
                     n0 += dir
                     n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,0,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
@@ -852,7 +888,11 @@ class Voronoi:
                 n0 = 4
                 dir = 1
                 while bool and k < 4:
+                    print("boucle")
                     n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
                     s_new, b_corner = self.next_edge(n0,1,s,corner)
                     Ls_edge.append(s_new)
                     bool, corner = b_corner
