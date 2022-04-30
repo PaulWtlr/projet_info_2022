@@ -1257,7 +1257,7 @@ class MainWindow:
         colors = ["blue","red","green","black","yellow"]*100
         for l in lines:
             n += 1
-            self.w.create_line(l[0], l[1], l[2], l[3], fill=colors[n], tags="lines")
+            self.w.create_line(l[0], l[1], l[2], l[3], fill=colors[n], tags="lines", width=6)
 
 
 
