@@ -1193,7 +1193,7 @@ class MainWindow:
         #On efface les lignes du diagramme précédent
 
         self.w.delete("lines")
-
+        self.w.delete("poly")
         #Calcul du diagramme de Voronoi via les points placés sur la fenêtre de jeu
         pObj = self.w.find_all()
         points = []
@@ -1234,30 +1234,57 @@ class MainWindow:
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
 
 
+    
+        self.drawPolygonOnCanva2(vp.player.polygons)
         #Tracer du diagramme de Voronoï
         self.drawLinesOnCanvas(lines)
+        
 
         #Incrémentation du compteur de tour
         self.count += 1
 
         self.LOCK_FLAG = False
         
+        print(vp.player.polygons)
+        print(sort(vp.player.polygons))
         
-
+        
+        
     def drawLinesOnCanvas(self, lines):
         n=0
         colors = ["blue","red","green","black","yellow"]*100
         for l in lines:
             n += 1
             self.w.create_line(l[0], l[1], l[2], l[3],width = 6, fill=colors[n], tags="lines")
-            
-    def drawPolygonOnCanva(self,pol):
-        
+
+    def drawPolygonOnCanva2(self,pol):
+        pol=sort(pol)
         for single_pol in pol:
-            list_pol = list(itertools.chain(*single_pol))
-            self.w.create_polygon(list_pol)
+            pol_trace = list(itertools.chain(single_pol))
+            self.w.create_polygon(pol_trace, fill = "red", stipple='gray50', tags = "poly")
+            
+import math
+import matplotlib.patches as patches
+import pylab
+
+def Area(corners):
+    n = len(corners) # of corners
+    area = 0.0
+    for i in range(n):
+        j = (i + 1) % n
+        area += corners[i][0] * corners[j][1]
+        area -= corners[j][0] * corners[i][1]
+    area = abs(area) / 2.0
+    return area
+
+def sort(pol):
+    for single_pol in pol:
+        cent=(sum([p[0] for p in single_pol])/len(single_pol),sum([p[1] for p in single_pol])/len(single_pol))
+        single_pol.sort(key=lambda p: math.atan2(p[1]-cent[1],p[0]-cent[0]))
+    return pol
 
 import itertools
+
 
 def main():
     root = tk.Tk()
