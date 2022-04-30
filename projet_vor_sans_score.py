@@ -93,13 +93,21 @@ class Segment:
 
     def hauteur(self,p):
         if self.end.x - self.start.x == 0 :
-            a1 = 1000000
+            x0 = self.start.x
+            y0 = p.y
+            p_inter = Point(x0,y0)
+
+            return p.distance(p_inter)
         else :
             a1 = (self.end.y - self.start.y) / (self.end.x - self.start.x) #pente du segment
         if a1 == 0 :
-            a2 = 1000000
+            x0 = p.x
+            y0 = self.start.y
+            p_inter = Point(x0,y0)
+
+            return p.distance(p_inter)
         else :
-            a2 =  1/a1 #pente de la droite perpendiculaire à self passant par p
+            a2 =  -1/a1 #pente de la droite perpendiculaire à self passant par p
         x0 = (a1*(self.start.x) + a2*(p.x) - (p.y) - (self.start.y))*(a1 + a2) # abscisse du point d'intersection des deux droites
         y0 = a2*(x0 - p.x) + p.y
         p_inter = Point(x0,y0)
@@ -146,7 +154,7 @@ class Segment:
         if self.start.x < 0 or self.start.x > 500 or self.start.y < 0 or self.start.y > 500:
             self.start = self.p_edge(self.start)
 
-        if self.end.x < 0 or self.end.x > 500 or self.end.y < 0 or self.end.y > 500:
+        if self.end != None and self.end.x < 0 or self.end.x > 500 or self.end.y < 0 or self.end.y > 500:
             self.end = self.p_edge(self.end)
 
 class PriorityQueue:
@@ -441,7 +449,7 @@ class Voronoi:
             if s1.end == None :
                 self.output.remove(s1)
             for s2 in self.output:
-                if s1 != s2 and [s1.start.x, s1.start.y, s1.end.x, s1.end.y] == [s2.start.x, s2.start.y, s2.end.x, s2.end.y]:
+                if s1 != s2 and s2.end != None and s1.end != None and [s1.start.x, s1.start.y, s1.end.x, s1.end.y] == [s2.start.x, s2.start.y, s2.end.x, s2.end.y]:
                     self.output.remove(s2)
 
     def correct_belonging(self):
@@ -495,8 +503,10 @@ class Voronoi:
         for s in self.output:
             s.actu_score()
 
+        self.bot.polygons = []
+        self.player.polygons = []
         self.upd_pol(self.points_save)
-        print('pol bot',self.bot.polygons,'pol player',self.player.polygons)
+        #print('pol bot',self.bot.polygons,'pol player',self.player.polygons)
 
 
     def next_edge(self,n,direction,s,s_edge): # fonction qui a un segment s ayant pour extremité s_edge sur le bord n du canvas trouve le segment ininterrompu qui longe c bord dans le direction : direction (=1 pour montée =0 pour descente en regardant le bord gauche)
