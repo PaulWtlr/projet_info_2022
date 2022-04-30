@@ -5,8 +5,9 @@ import tkinter as tk
 import heapq
 import itertools
 import random
-import itertools
-import pylab
+
+
+
 
 class Player:
     polygons = []
