@@ -5,6 +5,8 @@ import tkinter as tk
 import heapq
 import itertools
 import random
+import itertools
+import pylab
 
 class Player:
     polygons = []
@@ -244,11 +246,12 @@ class Voronoi:
                         pol.append(point1)
             if len(pol) > 0:
                 p.player.add_pol(pol)
+        sort(self.player.polygons)
+        sort(self.bot.polygons)
 
-    def act_score2(self,points):
-        self.upd_pol(points)
-        self.player.score = Area(sort(self.player.polygons))
-        self.bot.score = Area(sort(self.bot.polygons))
+    def act_score2(self):
+        self.player.score = area(self.player.polygons)
+        self.bot.score = area(self.bot.polygons)
         
 
     def process(self):
@@ -496,9 +499,9 @@ class Voronoi:
         Ls_edge = self.correct_seg()
         self.output += Ls_edge
 
-        for s in self.output:
-            s.actu_score()
-
+        #for s in self.output:
+            #s.actu_score()
+            
         self.upd_pol(self.points_save)
         
 
@@ -1227,7 +1230,7 @@ class MainWindow:
         vp = Voronoi(points)
         vp.process()
         lines = vp.get_output()
-
+        vp.act_score2()
 
 
         #Actualisation du score du joueur et du bot #
@@ -1240,8 +1243,9 @@ class MainWindow:
 
 
         
-        self.drawPolygonOnCanvas(vp)
+        
         #Tracer du diagramme de Voronoï
+        self.drawPolygonOnCanvas(vp)
         self.drawLinesOnCanvas(lines)
         
 
@@ -1250,8 +1254,7 @@ class MainWindow:
 
         self.LOCK_FLAG = False
         
-        print(vp.player.polygons)
-        print(sort(vp.player.polygons))
+        
         
         
         
@@ -1265,28 +1268,32 @@ class MainWindow:
     def drawPolygonOnCanvas(self,vp):
         
 
-        for single_pol in sort(vp.player.polygons):
+        for single_pol in vp.player.polygons:
             pol_trace = list(itertools.chain(single_pol))
             self.w.create_polygon(pol_trace, fill = "red", stipple='gray50', tags = "poly")
             
-        for single_pol in sort(vp.bot.polygons):
+        for single_pol in vp.bot.polygons:
             pol_trace = list(itertools.chain(single_pol))
             self.w.create_polygon(pol_trace, fill = "blue", stipple='gray50', tags = "poly")
             
-import math
-import matplotlib.patches as patches
-import pylab
 
-def Area(list_corners):
-    area = 0.0
-    for corners in list_corners:
-        n = len(corners) # of corners
-        for i in range(n):
-            j = (i + 1) % n
-            area += corners[i][0] * corners[j][1]
-            area -= corners[j][0] * corners[i][1]
-            area = abs(area) / 2.0
-    return area
+
+def polygon_area(coords):
+    # get x and y in vectors
+    x = [point[0] for point in coords]
+    y = [point[1] for point in coords]
+    # shift coordinates
+    x_ = x - np.mean(x)
+    y_ = y - np.mean(y)
+    # calculate area
+    correction = x_[-1] * y_[0] - y_[-1] * x_[0]
+    main_area = np.dot(x_[:-1], y_[1:]) - np.dot(y_[:-1], x_[1:])
+    return 0.5 * np.abs(main_area + correction)
+
+def area(list_coords):
+    return np.sum([polygon_area(coords) for coords in list_coords])
+    
+
 
 def sort(pol):
     for single_pol in pol:
@@ -1294,7 +1301,7 @@ def sort(pol):
         single_pol.sort(key=lambda p: math.atan2(p[1]-cent[1],p[0]-cent[0]))
     return pol
 
-import itertools
+
 
 
 def main():
