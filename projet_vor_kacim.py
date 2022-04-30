@@ -1235,7 +1235,7 @@ class MainWindow:
 
 
     
-        self.drawPolygonOnCanva2(vp.player.polygons)
+        self.drawPolygonOnCanvas(vp)
         #Tracer du diagramme de Voronoï
         self.drawLinesOnCanvas(lines)
         
@@ -1257,11 +1257,16 @@ class MainWindow:
             n += 1
             self.w.create_line(l[0], l[1], l[2], l[3],width = 6, fill=colors[n], tags="lines")
 
-    def drawPolygonOnCanva2(self,pol):
-        pol=sort(pol)
-        for single_pol in pol:
+    def drawPolygonOnCanvas(self,vp):
+        
+
+        for single_pol in sort(vp.player.polygons):
             pol_trace = list(itertools.chain(single_pol))
             self.w.create_polygon(pol_trace, fill = "red", stipple='gray50', tags = "poly")
+            
+        for single_pol in sort(vp.bot.polygons):
+            pol_trace = list(itertools.chain(single_pol))
+            self.w.create_polygon(pol_trace, fill = "blue", stipple='gray50', tags = "poly")
             
 import math
 import matplotlib.patches as patches
