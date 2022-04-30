@@ -457,28 +457,29 @@ class Voronoi:
         Ls_edge = self.correct_seg()
         for s in self.output:
             p_aux = Point(s.start.x/2 + s.end.x/2,s.start.y/2 + s.end.y/2)
-            Lp =[]
-            Ld=[]
-            for p in self.points_save:
-                Lp.append(p)
-                Ld.append(p_aux.distance(p))
+            Lp = [ p for p in self.points_save]
+            Ld = [ p_aux.distance(p) for p in self.points_save]
+            
+            
             i = Ld.index(min(Ld))
             p1 = Lp[i]
             Lp.remove(p1)
             Ld.remove(Ld[i])
             i2 = Ld.index(min(Ld))
             p2 = Lp[i2]
+            
+            
             s.p1 = p1
             s.p2 = p2
 
         for s in Ls_edge:
             p_aux = Point(s.start.x/2 + s.end.x/2,s.start.y/2 + s.end.y/2)
-            Lp =[]
-            Ld=[]
-            for p in self.points_save:
-                Lp.append(p)
-                Ld.append(p_aux.distance(p))
-                i = Ld.index(min(Ld))
+
+            Lp = [ p for p in self.points_save]
+            Ld = [ p_aux.distance(p) for p in self.points_save]
+            
+            
+            i = Ld.index(min(Ld))
             p1 = Lp[i]
             s.p1 = p1
             s.p2 = None
@@ -495,7 +496,8 @@ class Voronoi:
         self.clean_output()
         for s in self.output :
             s.inter_edge()
-
+            
+       
         self.correct_belonging()
         Ls_edge = self.correct_seg()
 
@@ -718,8 +720,8 @@ class Voronoi:
                 else:
                     s_new.finish(Point(0,0))
                     corner = (True,Point(0,0))
-        x8 = s_new.end.x
-        y8 = s_new.end.y
+        #x8 = s_new.end.x
+        #y8 = s_new.end.y
         p_center = Point(s_new.start.x/2 + s_new.end.x/2, s_new.start.y/2 + s_new.end.y/2)
         d1 = s.p1.distance(p_center)
         d2 = -1
@@ -1185,6 +1187,7 @@ class MainWindow:
 
         vp = Voronoi(points)
         vp.process()
+        vp.act_score2()
         return vp
 
 
@@ -1206,7 +1209,7 @@ class MainWindow:
 
     def DBC_place(self,points):
 
-        DBC_list=[(350,350),(150,350),(350,150),(150,150),(250,250)]
+        DBC_list=[(350,350),(150,350),(350,150),(150,150),(250,250),(0,0)]
         #Cette liste contient les coordonnées d'un diagramme de Voronoï équilibré à 5 points
 
         i=self.count
@@ -1220,13 +1223,13 @@ class MainWindow:
     #Placement du point selon la stratégie gloutonne ou greedy#
     def greedy_place(self,points):
 
-        xy = [(i,j) for i in np.linspace(5,495,10) for j in np.linspace(5,495,10)]
+        xy = [(i,j) for i in np.linspace(5,495,20) for j in np.linspace(5,495,20)]
         #Discrétisation du plan en une grille 20x20
 
         #Initialisation du max
         self.w.create_oval(xy[0][0]-self.RADIUS, xy[0][1]-self.RADIUS, xy[0][0]+self.RADIUS, xy[0][1]+self.RADIUS, fill= "yellow", tags = 'train')
         vp=self.get_vp()
-        maxi = vp.bot.score/(10**4)
+        maxi = vp.bot.score
         (x_play,y_play) = (0,0)
         self.w.delete("train")
 
@@ -1235,8 +1238,8 @@ class MainWindow:
         for (x,y) in xy:
             self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "yellow", tags = 'train')
             vp = self.get_vp()
-            if vp.bot.score/(10**4) > maxi:
-                maxi = vp.bot.score/(10**4)
+            if vp.bot.score > maxi:
+                maxi = vp.bot.score
                 (x_play,y_play) = (x,y)
             self.w.delete("train")
         self.w.create_oval(x_play-self.RADIUS, y_play-self.RADIUS, x_play+self.RADIUS, y_play+self.RADIUS, fill= "blue")
@@ -1303,9 +1306,10 @@ class MainWindow:
         self.count += 1
 
         self.LOCK_FLAG = False
-
-
-
+                
+        print(vp.player.polygons)
+        print(vp.bot.polygons)
+        print('-----------------------------')
 
 
     def drawLinesOnCanvas(self, lines):
