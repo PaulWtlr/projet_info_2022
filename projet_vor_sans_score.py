@@ -463,11 +463,12 @@ class Voronoi:
 
         self.clean_output()
         for s in self.output:
+            p_aux = Point(s.start.x/2 + s.end.x/2,s.start.y/2 + s.end.y/2)
             Lp =[]
             Ld=[]
             for p in self.points_save:
                 Lp.append(p)
-                Ld.append(s.start.distance(p))
+                Ld.append(p_aux.distance(p))
             i = Ld.index(min(Ld))
             p1 = Lp[i]
             Lp.remove(p1)
@@ -478,12 +479,13 @@ class Voronoi:
             s.p2 = p2
 
         for s in Ls_edge:
+            p_aux = Point(s.start.x/2 + s.end.x/2,s.start.y/2 + s.end.y/2)
             Lp =[]
             Ld=[]
             for p in self.points_save:
                 Lp.append(p)
-                Ld.append(s.start.distance(p))
-            i = Ld.index(min(Ld))
+                Ld.append(p_aux.distance(p))
+                i = Ld.index(min(Ld))
             p1 = Lp[i]
             s.p1 = p1
             s.p2 = None
