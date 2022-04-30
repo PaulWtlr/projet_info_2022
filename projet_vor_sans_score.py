@@ -10,9 +10,9 @@ class Player:
     polygons = []
     n = None
 
-    def __init__(self,n, polygons=[],score=0 ):
+    def __init__(self,n,score=0 ):
         self.n = n
-        self.polygons = polygons
+        self.polygons = []
         self.score = 0
 
     def add_pol(self,pol):
@@ -234,8 +234,10 @@ class Voronoi:
             pol=[]
             for s in self.output:
                 if s.p1 is not None and (s.p1 == p or s.p2 == p):
-                    point0 = (s.start.x, s.start.y)
-                    point1 = (s.end.x, s.end.y)
+                    #point0 = (s.start.x, s.start.y)
+                    #point1 = (s.end.x, s.end.y)
+                    point0 = (int(s.start.x), int(s.start.y))
+                    point1 = (int(s.end.x),int(s.end.y))
                     if point0 not in pol:
                         pol.append(point0)
                     if point1 not in pol:
@@ -461,9 +463,36 @@ class Voronoi:
 
         self.clean_output()
         for s in self.output:
+            Lp =[]
+            Ld=[]
+            for p in self.points_save:
+                Lp.append(p)
+                Ld.append(s.start.distance(p))
+            i = Ld.index(min(Ld))
+            p1 = Lp[i]
+            Lp.remove(p1)
+            Ld.remove(Ld[i])
+            i2 = Ld.index(min(Ld))
+            p2 = Lp[i2]
+            s.p1 = p1
+            s.p2 = p2
+
+        for s in Ls_edge:
+            Lp =[]
+            Ld=[]
+            for p in self.points_save:
+                Lp.append(p)
+                Ld.append(s.start.distance(p))
+            i = Ld.index(min(Ld))
+            p1 = Lp[i]
+            s.p1 = p1
+            s.p2 = None
+
+        for s in self.output:
             s.actu_score()
 
         self.upd_pol(self.points_save)
+        print('pol bot',self.bot.polygons,'pol player',self.player.polygons)
 
 
     def next_edge(self,n,direction,s,s_edge): # fonction qui a un segment s ayant pour extremité s_edge sur le bord n du canvas trouve le segment ininterrompu qui longe c bord dans le direction : direction (=1 pour montée =0 pour descente en regardant le bord gauche)
@@ -988,6 +1017,11 @@ class MainWindow:
         self.w = tk.Canvas(self.frmMain, width=500, height=500)
         self.w.config(background='white')
         self.w.bind('<Double-1>', self.onDoubleClick)
+        self.w.create_text(10,10,text="0")
+        self.w.create_text(490,10,text="x5y0")
+        self.w.create_text(15,490,text="x0y5")
+        self.w.create_text(490,490,text="x5y5")
+
         self.w.pack()
 
         self.frmButton = tk.Frame(self.master)
