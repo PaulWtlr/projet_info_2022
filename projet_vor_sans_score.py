@@ -444,24 +444,9 @@ class Voronoi:
                 if s1 != s2 and [s1.start.x, s1.start.y, s1.end.x, s1.end.y] == [s2.start.x, s2.start.y, s2.end.x, s2.end.y]:
                     self.output.remove(s2)
 
-
-    def finish_edges(self):
-        l = self.x1 + (self.x1 - self.x0) + (self.y1 - self.y0)
-        i = self.arc
-        while i.pnext != None:
-            if i.s1 != None:
-                p = self.intersection(i.p, i.pnext.p, l*2.0)
-                i.s1.finish(p)
-            i = i.pnext
-
+    def correct_belonging(self):
         self.clean_output()
-        for s in self.output :
-            s.inter_edge()
-
         Ls_edge = self.correct_seg()
-        self.output += Ls_edge
-
-        self.clean_output()
         for s in self.output:
             p_aux = Point(s.start.x/2 + s.end.x/2,s.start.y/2 + s.end.y/2)
             Lp =[]
@@ -489,6 +474,23 @@ class Voronoi:
             p1 = Lp[i]
             s.p1 = p1
             s.p2 = None
+
+    def finish_edges(self):
+        l = self.x1 + (self.x1 - self.x0) + (self.y1 - self.y0)
+        i = self.arc
+        while i.pnext != None:
+            if i.s1 != None:
+                p = self.intersection(i.p, i.pnext.p, l*2.0)
+                i.s1.finish(p)
+            i = i.pnext
+
+        self.clean_output()
+        for s in self.output :
+            s.inter_edge()
+
+        self.correct_belonging()
+        Ls_edge = self.correct_seg()
+        self.output += Ls_edge
 
         for s in self.output:
             s.actu_score()
