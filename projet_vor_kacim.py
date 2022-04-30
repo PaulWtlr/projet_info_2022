@@ -97,14 +97,14 @@ class Segment:
         if self.end.y - self.start.y == 0 :
             p_inter = Point(p.x,self.start.y)
         elif self.end.x - self.start.x != 0  :
-            a1 = (self.end.y - self.start.y) / (self.end.x - self.start.x) 
+            a1 = (self.end.y - self.start.y) / (self.end.x - self.start.x)
             a2 =  -1/a1 #pente de la droite perpendiculaire à self passant par p
             x0 = (-a1*(self.start.x) + a2*(p.x) - (p.y) + (self.start.y))/(a2 - a1) # abscisse du point d'intersection des deux droites
             y0 = a2*(x0 - p.x) + p.y
             p_inter = Point(x0,y0)
 
         return p.distance(p_inter)
-        
+
 
     def actu_score(self):
             if self.p1 != None and not self.score1:
@@ -490,13 +490,14 @@ class Voronoi:
 
         self.correct_belonging()
         Ls_edge = self.correct_seg()
+        print(len(Ls_edge))
         self.output += Ls_edge
 
         for s in self.output:
             s.actu_score()
 
         self.upd_pol(self.points_save)
-        
+
 
 
     def next_edge(self,n,direction,s,s_edge): # fonction qui a un segment s ayant pour extremité s_edge sur le bord n du canvas trouve le segment ininterrompu qui longe c bord dans le direction : direction (=1 pour montée =0 pour descente en regardant le bord gauche)
@@ -1241,8 +1242,8 @@ class MainWindow:
         self.count += 1
 
         self.LOCK_FLAG = False
-        
-        
+
+
 
     def drawLinesOnCanvas(self, lines):
         n=0
@@ -1250,9 +1251,9 @@ class MainWindow:
         for l in lines:
             n += 1
             self.w.create_line(l[0], l[1], l[2], l[3],width = 6, fill=colors[n], tags="lines")
-            
+
     def drawPolygonOnCanva(self,pol):
-        
+
         for single_pol in pol:
             list_pol = list(itertools.chain(*single_pol))
             self.w.create_polygon(list_pol)
