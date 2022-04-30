@@ -97,14 +97,14 @@ class Segment:
         if self.end.y - self.start.y == 0 :
             p_inter = Point(p.x,self.start.y)
         elif self.end.x - self.start.x != 0  :
-            a1 = (self.end.y - self.start.y) / (self.end.x - self.start.x) 
+            a1 = (self.end.y - self.start.y) / (self.end.x - self.start.x)
             a2 =  -1/a1 #pente de la droite perpendiculaire à self passant par p
             x0 = (-a1*(self.start.x) + a2*(p.x) - (p.y) + (self.start.y))/(a2 - a1) # abscisse du point d'intersection des deux droites
             y0 = a2*(x0 - p.x) + p.y
             p_inter = Point(x0,y0)
 
         return p.distance(p_inter)
-        
+
 
     def actu_score(self):
             if self.p1 != None and not self.score1:
@@ -249,7 +249,7 @@ class Voronoi:
         self.upd_pol(points)
         self.player.score = Area(sort(self.player.polygons))
         self.bot.score = Area(sort(self.bot.polygons))
-        
+
 
     def process(self):
         while not self.points.empty():
@@ -494,13 +494,23 @@ class Voronoi:
 
         self.correct_belonging()
         Ls_edge = self.correct_seg()
+        print(len(Ls_edge))
+        for s1 in Ls_edge:
+            for s2 in Ls_edge:
+                if s1 != s2 and [s1.start.x, s1.start.y, s1.end.x, s1.end.y] == [s2.start.x, s2.start.y, s2.end.x, s2.end.y]:
+                    Ls_edge.remove(s2)
+                elif s1 != s2 and [s1.start.x, s1.start.y, s1.end.x, s1.end.y] == [s2.end.x, s2.end.y, s2.start.x, s2.start.y]:
+                    Ls_edge.remove(s2)
+        print(len(Ls_edge))
+        for s in Ls_edge:
+            print('start',(int(s.start.x), int(s.start.y)),'end', (int(s.end.x), int(s.end.y)))
         self.output += Ls_edge
 
         for s in self.output:
             s.actu_score()
 
         self.upd_pol(self.points_save)
-        
+
 
 
     def next_edge(self,n,direction,s,s_edge): # fonction qui a un segment s ayant pour extremité s_edge sur le bord n du canvas trouve le segment ininterrompu qui longe c bord dans le direction : direction (=1 pour montée =0 pour descente en regardant le bord gauche)
@@ -677,9 +687,9 @@ class Voronoi:
             s_new.p1 = s.p2
         else :
             s_new.p1 = s.p1
-
+        bool, truc = corner
         return s_new,corner
-    
+
 
     def correct_seg(self):
 
@@ -1239,22 +1249,22 @@ class MainWindow:
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
 
 
-        
+
         self.drawPolygonOnCanvas(vp)
         #Tracer du diagramme de Voronoï
         self.drawLinesOnCanvas(lines)
-        
+
 
         #Incrémentation du compteur de tour
         self.count += 1
 
         self.LOCK_FLAG = False
-        
+
         print(vp.player.polygons)
         print(sort(vp.player.polygons))
-        
-        
-        
+
+
+
     def drawLinesOnCanvas(self, lines):
         n=0
         colors = ["blue","red","green","black","yellow"]*100
@@ -1263,16 +1273,16 @@ class MainWindow:
             self.w.create_line(l[0], l[1], l[2], l[3],width = 6, fill=colors[n], tags="lines")
 
     def drawPolygonOnCanvas(self,vp):
-        
+
 
         for single_pol in sort(vp.player.polygons):
             pol_trace = list(itertools.chain(single_pol))
             self.w.create_polygon(pol_trace, fill = "red", stipple='gray50', tags = "poly")
-            
+
         for single_pol in sort(vp.bot.polygons):
             pol_trace = list(itertools.chain(single_pol))
             self.w.create_polygon(pol_trace, fill = "blue", stipple='gray50', tags = "poly")
-            
+
 import math
 import matplotlib.patches as patches
 import pylab
