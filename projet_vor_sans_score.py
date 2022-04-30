@@ -1031,10 +1031,10 @@ class MainWindow:
         self.w = tk.Canvas(self.frmMain, width=500, height=500)
         self.w.config(background='white')
         self.w.bind('<Double-1>', self.onDoubleClick)
-        self.w.create_text(10,10,text="0")
-        self.w.create_text(490,10,text="x5y0")
-        self.w.create_text(15,490,text="x0y5")
-        self.w.create_text(490,490,text="x5y5")
+        self.w.create_text(25,25,text="0")
+        self.w.create_text(475,35,text="x5y0")
+        self.w.create_text(25,475,text="x0y5")
+        self.w.create_text(475,475,text="x5y5")
 
         self.w.pack()
 
