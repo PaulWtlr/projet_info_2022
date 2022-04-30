@@ -108,7 +108,7 @@ class Segment:
             return p.distance(p_inter)
         else :
             a2 =  -1/a1 #pente de la droite perpendiculaire à self passant par p
-        x0 = (a1*(self.start.x) + a2*(p.x) - (p.y) - (self.start.y))*(a1 + a2) # abscisse du point d'intersection des deux droites
+        x0 = (a1*(self.start.x) + a2*(p.x) + (p.y) - (self.start.y))/(a1 - a2) # abscisse du point d'intersection des deux droites
         y0 = a2*(x0 - p.x) + p.y
         p_inter = Point(x0,y0)
 
