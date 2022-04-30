@@ -245,7 +245,11 @@ class Voronoi:
             if len(pol) > 0:
                 p.player.add_pol(pol)
 
-
+    def act_score2(self,points):
+        self.upd_pol(points)
+        self.player.score = Area(sort(self.player.polygons))
+        self.bot.score = Area(sort(self.bot.polygons))
+        
 
     def process(self):
         while not self.points.empty():
@@ -675,7 +679,7 @@ class Voronoi:
             s_new.p1 = s.p1
 
         return s_new,corner
-
+    
 
     def correct_seg(self):
 
@@ -1225,6 +1229,7 @@ class MainWindow:
         lines = vp.get_output()
 
 
+
         #Actualisation du score du joueur et du bot #
 
         self.score_user = vp.player.score/(vp.bot.score + vp.player.score+1)
@@ -1234,7 +1239,7 @@ class MainWindow:
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
 
 
-    
+        
         self.drawPolygonOnCanvas(vp)
         #Tracer du diagramme de Voronoï
         self.drawLinesOnCanvas(lines)
@@ -1272,14 +1277,15 @@ import math
 import matplotlib.patches as patches
 import pylab
 
-def Area(corners):
-    n = len(corners) # of corners
+def Area(list_corners):
     area = 0.0
-    for i in range(n):
-        j = (i + 1) % n
-        area += corners[i][0] * corners[j][1]
-        area -= corners[j][0] * corners[i][1]
-    area = abs(area) / 2.0
+    for corners in list_corners:
+        n = len(corners) # of corners
+        for i in range(n):
+            j = (i + 1) % n
+            area += corners[i][0] * corners[j][1]
+            area -= corners[j][0] * corners[i][1]
+            area = abs(area) / 2.0
     return area
 
 def sort(pol):
