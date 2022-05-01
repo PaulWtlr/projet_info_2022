@@ -1,2 +1,2 @@
-# projet_info_2022
-Projet info 
+# Jeu de Voronoi (projet informatique ENSAE 1A: Paul Wattellier/Kacim Younsi)
+
