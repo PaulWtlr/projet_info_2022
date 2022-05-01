@@ -144,8 +144,7 @@ class Segment:
         else :
             return Point(p.x, 0)
 
-    def inter_edge(self): # si on considère la boite abcd où a est le coin inférieur gauche b le coin inférieur droit alors le bords 1 est ab, 2 bc, 3 cd et 4da
-
+    def inter_edge(self):
         if self.start.x < 0 or self.start.x > 500 or self.start.y < 0 or self.start.y > 500:
             self.start = self.p_edge(self.start)
 
@@ -206,10 +205,10 @@ class Voronoi:
         self.event = PriorityQueue() # événements circulaires
 
         # On pose la boîte dans laquelle on trace la diagramme (bounding box)
-        self.x0 = -50.0
-        self.x1 = -50.0
-        self.y0 = 550.0
-        self.y1 = 550.0
+        self.x0 = 0.0
+        self.x1 = 0.0
+        self.y0 = 0.0
+        self.y1 = 0.0
 
         # Insertion des points en tant qu'évènements ponctuels
         for pts in points:
@@ -224,7 +223,7 @@ class Voronoi:
             if point.y < self.y0: self.y0 = point.y
             if point.x > self.x1: self.x1 = point.x
             if point.y > self.y1: self.y1 = point.y
-        # add margins to the bounding box
+        # on ajoute des marges de sécurité
         dx = (self.x1 - self.x0 + 1) / 5.0
         dy = (self.y1 - self.y0 + 1) / 5.0
         self.x0 = self.x0 - dx
@@ -258,34 +257,33 @@ class Voronoi:
     def process(self):
         while not self.points.empty():
             if not self.event.empty() and (self.event.top().x <= self.points.top().x):
-                self.process_event() # handle circle event
+                self.process_event() # gère les évènements circulaires
             else:
-                self.process_point() # handle site event
+                self.process_point() # gère les évènements ponctuels
 
-        # after all points, process remaining circle events
+        # après avoir traité les points les évènements circulaires restant sont traités
         while not self.event.empty():
             self.process_event()
 
         self.finish_edges()
 
     def process_point(self):
-        # get next event from site pq
+        #on récupère l'évènement ponctuel de la file de priorité
         p = self.points.pop()
-        # add new arc (parabola)
+        # ajoute la nouvelle parabole au front parabolique
         self.arc_insert(p)
 
     def process_event(self):
-        # get next event from circle pq
+        # on récupère l'évènement circulaire de la file de priorité
         e = self.event.pop()
-        #print("Process Event : x =", e.x)
+
 
         if e.valid:
-            # start new edge
+            # début d'un nouveau segment
             s = Segment(e.p, p1 = e.p0, p2 = e.p1)
             self.output.append(s)
-            #print("Add segment : S(", s.start,"-", s.end,")",'p12_segment',s.p1,s.p2)
 
-            # remove associated arc (parabola)
+            # on enlève la parabole "engloutie"
             a = e.a
             if a.pprev is not None:
                 a.pprev.pnext = a.pnext
@@ -294,12 +292,12 @@ class Voronoi:
                 a.pnext.pprev = a.pprev
                 a.pnext.s0 = s
 
-            # finish the edges before and after a
+            # termine les segments qui atteignent le noeud
             if a.s0 is not None:
                 a.s0.finish(e.p)
             if a.s1 is not None:
                 a.s1.finish(e.p)
-            # recheck circle events on either side of p
+            # on regarde alors si cette intervention a permit la création d'autres évènements circulaires
             if a.pprev is not None: self.check_circle_event(a.pprev, e.x)
             if a.pnext is not None: self.check_circle_event(a.pnext, e.x)
 
@@ -308,12 +306,12 @@ class Voronoi:
         if self.arc is None:
             self.arc = Arc(p)
         else:
-            # find the current arcs at p.y
+            # trouve l'arc parabolique à actualiser
             i = self.arc
             while i is not None:
                 flag, z = self.intersect(p, i)
                 if flag:
-                    # new parabola intersects arc i
+                    # nouvelle parabole qui intersecte le front i
                     flag, zz = self.intersect(p, i.pnext)
                     if (i.pnext is not None) and (not flag):
                         i.pnext.pprev = Arc(i.p, player = i.p.player ,a = i, b = i.pnext)
@@ -322,13 +320,13 @@ class Voronoi:
                         i.pnext = Arc(i.p, player = i.p.player ,a = i)
                     i.pnext.s1 = i.s1
 
-                    # add p between i and i.pnext
+                    # ajout de p entre les paraboles i.p et i.pnext
                     i.pnext.pprev = Arc(p, player = p.player, a = i, b = i.pnext)
                     i.pnext = i.pnext.pprev
 
-                    i = i.pnext # now i points to the new arc
+                    i = i.pnext # on actualise alors i
 
-                    # add new half-edges connected to i's endpoints
+                    # on ajoute alors les segments qui sont formés comme vu dans la partie théorique
                     seg = Segment(z, p1 = p, p2 = i.p)
                     self.output.append(seg)
                     i.pprev.s1 = i.s0 = seg
@@ -337,7 +335,7 @@ class Voronoi:
                     self.output.append(seg)
                     i.pnext.s0 = i.s1 = seg
 
-                    # check for new circle events around the new arc
+                    # on n'oublie pas de regarder si nous avons engendrer des évènements circulaires
                     self.check_circle_event(i, p.x)
                     self.check_circle_event(i.pprev, p.x)
                     self.check_circle_event(i.pnext, p.x)
@@ -346,13 +344,13 @@ class Voronoi:
 
                 i = i.pnext
 
-            # if p never intersects an arc, append it to the list
+            # si p n'intersecte pas le front on l'ajoute à la liste
             i = self.arc
             while i.pnext is not None:
                 i = i.pnext
             i.pnext = Arc(p, player = p.player, a = i)
 
-            # insert new segment between p and i
+            # on ajoute un nouveau segment entre p et et i
             x = self.x0
             y = (i.pnext.p.y + i.p.y) / 2.0;
             start = Point(x, y)
@@ -362,7 +360,7 @@ class Voronoi:
             self.output.append(seg)
 
     def check_circle_event(self, i, x0):
-        # look for a new circle event for arc i
+        # regarde si un nouvel évènement circulaire va se produire sur le front i lorsque la droite de balayage va atteindre x0
         if (i.e is not None) and (i.e.x  != self.x0):
             i.e.valid = False
         i.e = None
@@ -375,7 +373,6 @@ class Voronoi:
             self.event.push(i.e)
 
     def circle(self, a, b, c):
-        # check if bc is a "right turn" from ab
         if ((b.x - a.x)*(c.y - a.y) - (c.x - a.x)*(b.y - a.y)) > 0: return False, None, None
 
         # Joseph O'Rourke, Computational Geometry in C (2nd ed.) p.189
@@ -387,20 +384,20 @@ class Voronoi:
         F = C*(a.x + c.x) + D*(a.y + c.y)
         G = 2*(A*(c.y - b.y) - B*(c.x - b.x))
 
-        if (G == 0): return False, None, None # Points are co-linear
+        if (G == 0): return False, None, None # Points alignés
 
-        # point o is the center of the circle
+        # point o au centre du cercle
         ox = 1.0 * (D*E - B*F) / G
         oy = 1.0 * (A*F - C*E) / G
 
-        # o.x plus radius equals max x coord
+        # o.x plus le rayon égale max x coord
         x = ox + math.sqrt((a.x-ox)**2 + (a.y-oy)**2)
         o = Point(ox, oy)
 
         return True, x, o
 
     def intersect(self, p, i):
-        # check whether a new parabola at point p intersect with arc i
+        # regarde si la parabole associé à p intersect l'arc i
         if (i is None): return False, None
         if (i.p.x == p.x): return False, None
 
@@ -420,7 +417,7 @@ class Voronoi:
         return False, None
 
     def intersection(self, p0, p1, l):
-        # get the intersection of two parabolas
+        # donne l'intersection des paraboles associés à p0(l) et p1(l) où l est l'abscisse de la droite de balayage
         p = p0
         if (p0.x == p1.x):
             py = (p0.y + p1.y) / 2.0
@@ -430,7 +427,6 @@ class Voronoi:
             py = p0.y
             p = p1
         else:
-            # use quadratic formula
             z0 = 2.0 * (p0.x - l)
             z1 = 2.0 * (p1.x - l)
 
@@ -448,7 +444,7 @@ class Voronoi:
         for s1 in self.output:
             if s1.end is None :
                 self.output.remove(s1)
-                                
+
         for s1 in self.output:
             for s2 in self.output:
                 if s1 != s2 and [s1.start.x, s1.start.y, s1.end.x, s1.end.y] == [s2.start.x, s2.start.y, s2.end.x, s2.end.y]:
@@ -457,43 +453,43 @@ class Voronoi:
     def correct_belonging(self):
         self.clean_output()
         Ls_edge = self.correct_seg()
-        
-                    
+
+
         for s in self.output:
             assert s not in Ls_edge, 's est traité comme un non bord'
             p_aux = Point(s.start.x/2 + s.end.x/2,s.start.y/2 + s.end.y/2)
             Lp = [ p for p in self.points_save]
             Ld = [ p_aux.distance(p) for p in self.points_save]
-            
-            
+
+
             i = Ld.index(min(Ld))
             p1 = Lp[i]
             Lp.remove(p1)
             Ld.remove(Ld[i])
             i2 = Ld.index(min(Ld))
             p2 = Lp[i2]
-            
-            
+
+
             s.p1 = p1
             s.p2 = p2
-            
-                
+
+
 
         for s in Ls_edge:
             p_aux = Point(s.start.x/2 + s.end.x/2,s.start.y/2 + s.end.y/2)
 
             Lp = [ p for p in self.points_save]
             Ld = [ p_aux.distance(p) for p in self.points_save]
-            
-            
+
+
             i = Ld.index(min(Ld))
             p1 = Lp[i]
             s.p1 = p1
             s.p2 = None
-        
+
         return Ls_edge
-            
-            
+
+
 
     def finish_edges(self):
         l = self.x1 + (self.x1 - self.x0) + (self.y1 - self.y0)
@@ -503,15 +499,15 @@ class Voronoi:
                 p = self.intersection(i.p, i.pnext.p, l*2.0)
                 i.s1.finish(p)
             i = i.pnext
-        
+
         self.clean_output()
         for s in self.output :
             s.inter_edge()
-            
-       
+
+
         Ls_edge = self.correct_belonging()
 
-        
+
         #print(len(Ls_edge))
         #for s in Ls_edge:
         #    print('start',(int(s.start.x), int(s.start.y)),'end', (int(s.end.x), int(s.end.y)))
@@ -1140,8 +1136,8 @@ class MainWindow:
     # valeur à la variable strategy qui vient changer la fonction de placement
     # de point du bot utilisé dans onDoubleClick
     def randomBot(self):
-        self.strategy = 0 
-    
+        self.strategy = 0
+
     def BonnePiocheBot(self):
         self.strategy = 1
 
@@ -1150,7 +1146,7 @@ class MainWindow:
 
     def DBCBot(self):
         self.strategy = 3
-        
+
     #Définition du bouton Clear : Clear reset le jeu#
     def onClickClear(self):
         self.LOCK_FLAG = False
@@ -1202,10 +1198,10 @@ class MainWindow:
     def DBC_place(self,points):
         #Cette liste contient les coordonnées d'un diagramme de Voronoï équilibré à 5 points
         DBC_list=[(400,400),(100,400),(400,100),(100,100),(250,250)]
-        
+
         #Cette liste contient une version legerement modifié de la liste précédente pour être plus imprévisible
         play_list = [ (x + random.choice((-1, 1))*r.random()*25, y + random.choice((-1, 1))*r.random()*25) for (x,y) in DBC_list]
-        
+
 
         i=self.count
         (x,y)=play_list[i]
@@ -1223,26 +1219,26 @@ class MainWindow:
             list_aire = [polygon_area(coords) for coords in list_coords]
             i = list_aire.index(max(list_aire))
             centre_pol_i = (sum([p[0] for p in list_coords[i]])/len(list_coords[i]),sum([p[1] for p in list_coords[i]])/len(list_coords[i]))
-            
+
             (x_play,y_play) = centre_pol_i
             self.w.create_oval(x_play-self.RADIUS, y_play-self.RADIUS, x_play+self.RADIUS, y_play+self.RADIUS, fill= "blue")
             points.append((x_play,y_play,0))
 
 
     #Placement du point selon la stratégie bonne pioche#
-    
+
     def BonnePioche_place(self,points):
-        
+
         xy = [(r.random()*500,r.random()*500) for i in range(20)]
-        
-        
+
+
         self.w.create_oval(xy[0][0]-self.RADIUS, xy[0][1]-self.RADIUS, xy[0][0]+self.RADIUS, xy[0][1]+self.RADIUS, fill= "yellow", tags = 'train')
         vp=self.get_vp()
         maxi = vp.bot.score
         (x_play,y_play) = (0,0)
         self.w.delete("train")
-    
-    
+
+
         #Boucle de recherche du max
         for (x,y) in xy:
             self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "yellow", tags = 'train')
@@ -1255,17 +1251,17 @@ class MainWindow:
         points.append((x_play,y_play,0))
 
     def onDoubleClick(self, event):
-        
+
         if self.count == 5:
-            self.check_winner() 
-            
-        else:    
+            self.check_winner()
+
+        else:
             if not self.LOCK_FLAG:
                 self.w.create_oval(event.x-self.RADIUS, event.y-self.RADIUS, event.x+self.RADIUS, event.y+self.RADIUS, fill= "red")
-    
+
             self.LOCK_FLAG = True
             #On efface les lignes du diagramme précédent
-    
+
             self.w.delete("lines")
             self.w.delete("poly")
             #Calcul du diagramme de Voronoi via les points placés sur la fenêtre de jeu
@@ -1278,60 +1274,60 @@ class MainWindow:
                 elif self.w.itemcget(p, "fill") == "blue":
                     coord = self.w.coords(p)
                     points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS,0))
-    
-    
+
+
             #Selection de la stratégie du bot #
             if self.strategy ==0:
                 self.random_place(points)
-    
-    
+
+
             elif self.strategy ==1:
                 self.BonnePioche_place(points)
-                
+
             elif self.strategy ==2:
-     
+
                 self.AntiGagnant_place(points)
-    
-    
+
+
             elif self.strategy ==3:
-    
+
                 self.DBC_place(points)
-    
-    
+
+
             vp = Voronoi(points)
             vp.process()
             lines = vp.get_output()
             vp.act_score2()
-    
-    
+
+
             #Actualisation du score du joueur et du bot #
-    
+
             self.score_user = vp.player.score/(vp.bot.score + vp.player.score+1)
             self.score_bot = vp.bot.score/(vp.bot.score + vp.player.score+1)
-    
+
             self.score_user_variable.set(f'Score Joueur: {self.score_user}')
             self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
-    
-    
-    
-    
+
+
+
+
             #Tracer du diagramme de Voronoï
             self.drawPolygonOnCanvas(vp)
             self.drawLinesOnCanvas(lines)
-    
-    
+
+
             #Incrémentation du compteur de tour
             self.count += 1
-    
+
             self.LOCK_FLAG = False
-                    
+
             print(vp.player.polygons)
             print(vp.bot.polygons)
             print('-----------------------------')
 
             if self.count == 5:
-                self.check_winner() 
-                
+                self.check_winner()
+
     def drawLinesOnCanvas(self, lines):
         #n=0
         #colors = ["blue","red","green","black","yellow"]*100
@@ -1350,16 +1346,16 @@ class MainWindow:
         for single_pol in vp.bot.polygons:
             pol_trace = list(itertools.chain(single_pol))
             self.w.create_polygon(pol_trace, fill = "blue", stipple='gray50', tags = "poly")
-    
+
     def check_winner(self):
         if self.score_user > self.score_bot:
             self.w.create_text(250, 300, text="Le joueur a gagné", fill="red", font=('Helvetica 15 bold'))
             self.w.pack()
-        
+
         elif self.score_user < self.score_bot:
             self.w.create_text(250, 300, text="L'ordinateur a gagné'", fill="blue", font=('Helvetica 15 bold'))
             self.w.pack()
-            
+
         else:
             self.w.create_text(250, 300, text="Egalité'", fill="black", font=('Helvetica 15 bold'))
             self.w.pack()
