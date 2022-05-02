@@ -1043,28 +1043,7 @@ colors=["blue","green","red","yellow","purple"]
 ###################################################################################
 #-------------------------------PARTIE TKINTER------------------------------------#
 ###################################################################################
-"""
-Dans cette partie, nous avons implémenté le jeu de Voronoï. Dans notre projet,
-chaque joueur possède 5 points à placer. Les stratégies que nous avons implémentées
-sont les suivantes:
 
-1) La stratégie gloutonne ou greedy: A chaque coup, le bot joue le coup qui
-    maximise son score. Comme le nombre de coup possible est infini nous discrétisons
-    la surface de jeu en une grille de 20x20 soit 400 coup possibles pour le bot.
-
-2) La stratégie MCTS (Monte-Carlo-Tree-Search): Pour chacun des 400 coups possibles
-    le bot simule les 400 réponses possibles du joueur et calcul le score moyen des
-    réponses du joueur. Le coup choisi est alors celui pour lequel le score moyen
-    du joueur est le plus bas
-
-3) La stratégie DBC (Defensive Balanced Cells): Une stratégie qui ne prend pas
-    en compte les coups du joueur mais joue selon un patterne fixe bien défini.
-    La stratégie construit un diagramme dit "équilibré" ou "balanced".
-    On dit qu'un diagramme est équilibré si toutes les cellules le sont. Une cellule
-    est dite équilibré si il existe une droite qui passe par le germe/noyau qui
-    coupe la cellule en 2 parties d'aires égales. Pour plus de détails sur cette notion
-    consulter : https://helios2.mi.parisdescartes.fr/~bouzy/publications/bouzy-acg13.pdf
-    page 7 """
 
 class MainWindow:
     # Rayon des points affichés sur le tkinter
@@ -1091,7 +1070,10 @@ class MainWindow:
 
         self.frmButton = tk.Frame(self.master)
         self.frmButton.pack()
-
+        
+        #Bouton de choix du mode jeu
+        self.btn2users = tk.Button(self.frmButton, text='Mode de jeu 2 joueurs', width=25, command=self.mode_2_users)
+        self.btn2users.pack(side=tk.LEFT)
 
         #Bouton de choix de la stratégie de l'ordinateur#
         self.btnGreedyBot = tk.Button(self.frmButton, text='Stratégie Bonne Pioche', width=25, command=self.BonnePiocheBot)
@@ -1129,9 +1111,15 @@ class MainWindow:
 
         #Variable de choix de stratégie#
         self.strategy = 0
+        
+        
+        #Variable mode de jeu 1 ou 2 joueurs
+        self.game_mode = 0
 
 
-
+    
+    def mode_2_users(self):
+        self.game_mode = 1
     # Pour le choix des stratégies, le bouton de chaque stratégie affecte une
     # valeur à la variable strategy qui vient changer la fonction de placement
     # de point du bot utilisé dans onDoubleClick
@@ -1157,6 +1145,7 @@ class MainWindow:
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
         self.count = 0
         self.strategy = 0
+        self.game_mode = 0
 
 
 
@@ -1182,12 +1171,11 @@ class MainWindow:
 
 
     #Placement du point aléatoirement #
-    def random_place(self,points):
+    def random_place(self):
         #points est la liste de points déjà sur le plan on ajoute juste le point que place le bot
         x=r.random()*500
         y=r.random()*500
         self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "blue")
-        points.append((x,y,0))
 
 
 
@@ -1195,7 +1183,7 @@ class MainWindow:
 
     #Placement du point selon la stratégie Defensive balanced cell#
 
-    def DBC_place(self,points):
+    def DBC_place(self):
         #Cette liste contient les coordonnées d'un diagramme de Voronoï équilibré à 5 points
         DBC_list=[(400,400),(100,400),(400,100),(100,100),(250,250)]
 
@@ -1206,13 +1194,11 @@ class MainWindow:
         i=self.count
         (x,y)=play_list[i]
         self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "blue")
-        points.append((x,y,0))
 
 
-    def AntiGagnant_place(self,points):
+    def AntiGagnant_place(self):
         if self.count == 0:
             self.w.create_oval(250-self.RADIUS, 250-self.RADIUS, 250+self.RADIUS, 250+self.RADIUS, fill= "blue")
-            points.append((250,250,0))
         else:
             vp = self.get_vp()
             list_coords = vp.player.polygons
@@ -1222,12 +1208,11 @@ class MainWindow:
 
             (x_play,y_play) = centre_pol_i
             self.w.create_oval(x_play-self.RADIUS, y_play-self.RADIUS, x_play+self.RADIUS, y_play+self.RADIUS, fill= "blue")
-            points.append((x_play,y_play,0))
 
 
     #Placement du point selon la stratégie bonne pioche#
 
-    def BonnePioche_place(self,points):
+    def BonnePioche_place(self):
 
         xy = [(r.random()*500,r.random()*500) for i in range(20)]
 
@@ -1248,92 +1233,120 @@ class MainWindow:
                 (x_play,y_play) = (x,y)
             self.w.delete("train")
         self.w.create_oval(x_play-self.RADIUS, y_play-self.RADIUS, x_play+self.RADIUS, y_play+self.RADIUS, fill= "blue")
-        points.append((x_play,y_play,0))
 
     def onDoubleClick(self, event):
+        
+        #On vérifie d'abord le mode de jeu 
+        
+        #Mode de jeu solo
+        if self.game_mode == 0:
+            
+            #On vérifie si le jeu doit s'arreter 
+            if self.count == 5:
+                self.check_winner()
+    
+            else:
+                if not self.LOCK_FLAG:
+                    self.w.create_oval(event.x-self.RADIUS, event.y-self.RADIUS, event.x+self.RADIUS, event.y+self.RADIUS, fill= "red")
+    
+                self.LOCK_FLAG = True
+                #On efface les lignes du diagramme précédent
+    
+                self.w.delete("lines")
+                self.w.delete("poly")
 
-        if self.count == 5:
-            self.check_winner()
+                #Selection de la stratégie du bot #
+                if self.strategy ==0:
+                    self.random_place()
+    
+                elif self.strategy ==1:
+                    self.BonnePioche_place()
+    
+                elif self.strategy ==2:
+                    self.AntiGagnant_place()
+    
+                elif self.strategy ==3:
+                    self.DBC_place()
+    
+                #On calcule le diagramme de Voronoi 
+                vp = self.get_vp()
+                lines = vp.get_output()
 
+    
+    
+                #Actualisation du score du joueur et du bot #
+    
+                self.score_user = 100*vp.player.score/(vp.bot.score + vp.player.score+1)
+                self.score_bot = 100*vp.bot.score/(vp.bot.score + vp.player.score+1)
+    
+                self.score_user_variable.set(f'Score Joueur: {self.score_user}')
+                self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
+                
+                #Tracer du diagramme de Voronoï
+                self.drawPolygonOnCanvas(vp)
+                self.drawLinesOnCanvas(lines)
+                
+                
+                #Incrémentation du compteur de tour
+                self.count += 1
+                
+                self.LOCK_FLAG = False
+                
+                if self.count == 5:
+                    self.check_winner()
+                
+                
+        #Mode de jeu 2 joueurs           
         else:
-            if not self.LOCK_FLAG:
+            
+            if self.count == 10:
+                self.check_winner()
+                
+            #On décide de la couleur du point en fonction du tour 
+            if self.count%2 == 0 and not self.LOCK_FLAG:
                 self.w.create_oval(event.x-self.RADIUS, event.y-self.RADIUS, event.x+self.RADIUS, event.y+self.RADIUS, fill= "red")
-
+                
+            if self.count%2 == 1 and not self.LOCK_FLAG:
+                self.w.create_oval(event.x-self.RADIUS, event.y-self.RADIUS, event.x+self.RADIUS, event.y+self.RADIUS, fill= "blue")
+                
             self.LOCK_FLAG = True
+            
             #On efface les lignes du diagramme précédent
 
             self.w.delete("lines")
             self.w.delete("poly")
-            #Calcul du diagramme de Voronoi via les points placés sur la fenêtre de jeu
-            pObj = self.w.find_all()
-            points = []
-            for p in pObj:
-                if self.w.itemcget(p, "fill") == "red":
-                    coord = self.w.coords(p)
-                    points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS,1))
-                elif self.w.itemcget(p, "fill") == "blue":
-                    coord = self.w.coords(p)
-                    points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS,0))
-
-
-            #Selection de la stratégie du bot #
-            if self.strategy ==0:
-                self.random_place(points)
-
-
-            elif self.strategy ==1:
-                self.BonnePioche_place(points)
-
-            elif self.strategy ==2:
-
-                self.AntiGagnant_place(points)
-
-
-            elif self.strategy ==3:
-
-                self.DBC_place(points)
-
-
-            vp = Voronoi(points)
-            vp.process()
+            
+            #On calcule le diagramme de Voronoi     
+            vp = self.get_vp()
             lines = vp.get_output()
-            vp.act_score2()
+            
+            #Actualisation du score des joueurs
+            self.score_user = 100*vp.player.score/(vp.bot.score + vp.player.score+1)
+            self.score_bot = 100*vp.bot.score/(vp.bot.score + vp.player.score+1)
+    
+            self.score_user_variable.set(f'Score Joueur 1: {self.score_user}')
+            self.score_bot_variable.set(f'Score Joueur 2: {self.score_bot}')
 
-
-            #Actualisation du score du joueur et du bot #
-
-            self.score_user = vp.player.score/(vp.bot.score + vp.player.score+1)
-            self.score_bot = vp.bot.score/(vp.bot.score + vp.player.score+1)
-
-            self.score_user_variable.set(f'Score Joueur: {self.score_user}')
-            self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
-
-
-
-
+    
             #Tracer du diagramme de Voronoï
             self.drawPolygonOnCanvas(vp)
             self.drawLinesOnCanvas(lines)
-
-
+            
+            
             #Incrémentation du compteur de tour
             self.count += 1
-
+            
             self.LOCK_FLAG = False
-
-            print(vp.player.polygons)
-            print(vp.bot.polygons)
-            print('-----------------------------')
-
-            if self.count == 5:
+            
+            if self.count == 10:
                 self.check_winner()
-
+                
+    
+                
+                
     def drawLinesOnCanvas(self, lines):
-        #n=0
-        #colors = ["blue","red","green","black","yellow"]*100
+
         for l in lines:
-            #n += 1
-            #self.w.create_line(l[0], l[1], l[2], l[3],width = 2, fill=colors[n], tags="lines")
             self.w.create_line(l[0], l[1], l[2], l[3],width = 2, tags="lines")
 
     def drawPolygonOnCanvas(self,vp):
@@ -1347,31 +1360,50 @@ class MainWindow:
             pol_trace = list(itertools.chain(single_pol))
             self.w.create_polygon(pol_trace, fill = "blue", stipple='gray50', tags = "poly")
 
+
+
     def check_winner(self):
-        if self.score_user > self.score_bot:
-            self.w.create_text(250, 300, text="Le joueur a gagné", fill="red", font=('Helvetica 15 bold'))
-            self.w.pack()
-
-        elif self.score_user < self.score_bot:
-            self.w.create_text(250, 300, text="L'ordinateur a gagné'", fill="blue", font=('Helvetica 15 bold'))
-            self.w.pack()
-
-        else:
-            self.w.create_text(250, 300, text="Egalité'", fill="black", font=('Helvetica 15 bold'))
-            self.w.pack()
+        
+        if self.game_mode == 0:
+            if self.score_user > self.score_bot:
+                self.w.create_text(250, 300, text="Le joueur a gagné", fill="red", font=('Helvetica 15 bold'))
+                self.w.pack()
+    
+            elif self.score_user < self.score_bot:
+                self.w.create_text(250, 300, text="L'ordinateur a gagné'", fill="blue", font=('Helvetica 15 bold'))
+                self.w.pack()
+    
+            else:
+                self.w.create_text(250, 300, text="Egalité'", fill="black", font=('Helvetica 15 bold'))
+                self.w.pack()
+                
+                
+        #Si on a deux joueurs le texte affiché en fin de partie doit changer        
+        if self.game_mode == 1:
+            if self.score_user > self.score_bot:
+                self.w.create_text(250, 300, text="Le Joueur rouge a gagné", fill="red", font=('Helvetica 15 bold'))
+                self.w.pack()
+    
+            elif self.score_user < self.score_bot:
+                self.w.create_text(250, 300, text="Le Joueur bleu a gagné'", fill="blue", font=('Helvetica 15 bold'))
+                self.w.pack()
+    
+            else:
+                self.w.create_text(250, 300, text="Egalité'", fill="black", font=('Helvetica 15 bold'))
+                self.w.pack()
 
 
 
 
 
 def polygon_area(coords):
-    # get x and y in vectors
+    # On récupère les coordonnées x,y des sommets
     x = [point[0] for point in coords]
     y = [point[1] for point in coords]
-    # shift coordinates
+    # On les décale par rapport au centre du polygone
     x_ = x - np.mean(x)
     y_ = y - np.mean(y)
-    # calculate area
+    # On calcul l'aire via la formule du papillon
     correction = x_[-1] * y_[0] - y_[-1] * x_[0]
     main_area = np.dot(x_[:-1], y_[1:]) - np.dot(y_[:-1], x_[1:])
     return 0.5 * np.abs(main_area + correction)
