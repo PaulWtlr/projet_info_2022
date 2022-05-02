@@ -117,7 +117,7 @@ class Segment:
                 self.p2.player.score += self.hauteur(self.p2)*(self.start.distance(self.end))/2
                 self.score2 = True
 
-    def p_edge(self,p):
+    def p_edge(self,p):  #renvoie l'intersection du Segment self avec le bord qui est dépassé par le segment
         if self.start.x - self.end.x != 0 :
             a = (self.end.y - self.start.y)/(self.end.x - self.start.x)
             x2 = 500
@@ -144,7 +144,7 @@ class Segment:
         else :
             return Point(p.x, 0)
 
-    def inter_edge(self):
+    def inter_edge(self): # regarde si un Segment dépasse un bord, si oui remet son extrémité sur le bord du canvas
         if self.start.x < 0 or self.start.x > 500 or self.start.y < 0 or self.start.y > 500:
             self.start = self.p_edge(self.start)
 
@@ -1070,7 +1070,7 @@ class MainWindow:
 
         self.frmButton = tk.Frame(self.master)
         self.frmButton.pack()
-        
+
         #Bouton de choix du mode jeu
         self.btn2users = tk.Button(self.frmButton, text='Mode de jeu 2 joueurs', width=25, command=self.mode_2_users)
         self.btn2users.pack(side=tk.LEFT)
@@ -1111,13 +1111,13 @@ class MainWindow:
 
         #Variable de choix de stratégie#
         self.strategy = 0
-        
-        
+
+
         #Variable mode de jeu 1 ou 2 joueurs
         self.game_mode = 0
 
 
-    
+
     def mode_2_users(self):
         self.game_mode = 1
     # Pour le choix des stratégies, le bouton de chaque stratégie affecte une
@@ -1235,115 +1235,115 @@ class MainWindow:
         self.w.create_oval(x_play-self.RADIUS, y_play-self.RADIUS, x_play+self.RADIUS, y_play+self.RADIUS, fill= "blue")
 
     def onDoubleClick(self, event):
-        
-        #On vérifie d'abord le mode de jeu 
-        
+
+        #On vérifie d'abord le mode de jeu
+
         #Mode de jeu solo
         if self.game_mode == 0:
-            
-            #On vérifie si le jeu doit s'arreter 
+
+            #On vérifie si le jeu doit s'arreter
             if self.count == 5:
                 self.check_winner()
-    
+
             else:
                 if not self.LOCK_FLAG:
                     self.w.create_oval(event.x-self.RADIUS, event.y-self.RADIUS, event.x+self.RADIUS, event.y+self.RADIUS, fill= "red")
-    
+
                 self.LOCK_FLAG = True
                 #On efface les lignes du diagramme précédent
-    
+
                 self.w.delete("lines")
                 self.w.delete("poly")
 
                 #Selection de la stratégie du bot #
                 if self.strategy ==0:
                     self.random_place()
-    
+
                 elif self.strategy ==1:
                     self.BonnePioche_place()
-    
+
                 elif self.strategy ==2:
                     self.AntiGagnant_place()
-    
+
                 elif self.strategy ==3:
                     self.DBC_place()
-    
-                #On calcule le diagramme de Voronoi 
+
+                #On calcule le diagramme de Voronoi
                 vp = self.get_vp()
                 lines = vp.get_output()
 
-    
-    
+
+
                 #Actualisation du score du joueur et du bot #
-    
+
                 self.score_user = 100*vp.player.score/(vp.bot.score + vp.player.score+1)
                 self.score_bot = 100*vp.bot.score/(vp.bot.score + vp.player.score+1)
-    
+
                 self.score_user_variable.set(f'Score Joueur: {self.score_user}')
                 self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
-                
+
                 #Tracer du diagramme de Voronoï
                 self.drawPolygonOnCanvas(vp)
                 self.drawLinesOnCanvas(lines)
-                
-                
+
+
                 #Incrémentation du compteur de tour
                 self.count += 1
-                
+
                 self.LOCK_FLAG = False
-                
+
                 if self.count == 5:
                     self.check_winner()
-                
-                
-        #Mode de jeu 2 joueurs           
+
+
+        #Mode de jeu 2 joueurs
         else:
-            
+
             if self.count == 10:
                 self.check_winner()
-                
-            #On décide de la couleur du point en fonction du tour 
+
+            #On décide de la couleur du point en fonction du tour
             if self.count%2 == 0 and not self.LOCK_FLAG:
                 self.w.create_oval(event.x-self.RADIUS, event.y-self.RADIUS, event.x+self.RADIUS, event.y+self.RADIUS, fill= "red")
-                
+
             if self.count%2 == 1 and not self.LOCK_FLAG:
                 self.w.create_oval(event.x-self.RADIUS, event.y-self.RADIUS, event.x+self.RADIUS, event.y+self.RADIUS, fill= "blue")
-                
+
             self.LOCK_FLAG = True
-            
+
             #On efface les lignes du diagramme précédent
 
             self.w.delete("lines")
             self.w.delete("poly")
-            
-            #On calcule le diagramme de Voronoi     
+
+            #On calcule le diagramme de Voronoi
             vp = self.get_vp()
             lines = vp.get_output()
-            
+
             #Actualisation du score des joueurs
             self.score_user = 100*vp.player.score/(vp.bot.score + vp.player.score+1)
             self.score_bot = 100*vp.bot.score/(vp.bot.score + vp.player.score+1)
-    
+
             self.score_user_variable.set(f'Score Joueur 1: {self.score_user}')
             self.score_bot_variable.set(f'Score Joueur 2: {self.score_bot}')
 
-    
+
             #Tracer du diagramme de Voronoï
             self.drawPolygonOnCanvas(vp)
             self.drawLinesOnCanvas(lines)
-            
-            
+
+
             #Incrémentation du compteur de tour
             self.count += 1
-            
+
             self.LOCK_FLAG = False
-            
+
             if self.count == 10:
                 self.check_winner()
-                
-    
-                
-                
+
+
+
+
     def drawLinesOnCanvas(self, lines):
 
         for l in lines:
@@ -1363,31 +1363,31 @@ class MainWindow:
 
 
     def check_winner(self):
-        
+
         if self.game_mode == 0:
             if self.score_user > self.score_bot:
                 self.w.create_text(250, 300, text="Le joueur a gagné", fill="red", font=('Helvetica 15 bold'))
                 self.w.pack()
-    
+
             elif self.score_user < self.score_bot:
                 self.w.create_text(250, 300, text="L'ordinateur a gagné'", fill="blue", font=('Helvetica 15 bold'))
                 self.w.pack()
-    
+
             else:
                 self.w.create_text(250, 300, text="Egalité'", fill="black", font=('Helvetica 15 bold'))
                 self.w.pack()
-                
-                
-        #Si on a deux joueurs le texte affiché en fin de partie doit changer        
+
+
+        #Si on a deux joueurs le texte affiché en fin de partie doit changer
         if self.game_mode == 1:
             if self.score_user > self.score_bot:
                 self.w.create_text(250, 300, text="Le Joueur rouge a gagné", fill="red", font=('Helvetica 15 bold'))
                 self.w.pack()
-    
+
             elif self.score_user < self.score_bot:
                 self.w.create_text(250, 300, text="Le Joueur bleu a gagné'", fill="blue", font=('Helvetica 15 bold'))
                 self.w.pack()
-    
+
             else:
                 self.w.create_text(250, 300, text="Egalité'", fill="black", font=('Helvetica 15 bold'))
                 self.w.pack()
