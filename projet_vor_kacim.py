@@ -557,14 +557,14 @@ class Voronoi:
         s_new = Segment(s_edge)
         corner = (False,Point(-1,-1))
         if n == 1:
-            assert(s_edge.x == 500) # bord droit du canvas
+            assert(s_edge.x == 500) # bord gauche du canvas
             Ls =[]
             Ly = []
             for s2 in self.output:
-                if direction == 1 : #montée
+                if direction == 1 :
                     b2 = s2.start.y > s_edge.y
                 else :
-                    b2 = s2.start.y < s_edge.y #descente
+                    b2 = s2.start.y < s_edge.y
 
                 if s2.start.x == 500 and b2 : #si un segment interromp le longement du bord on le note
                     Ls.append((s2,'s'))
@@ -598,7 +598,7 @@ class Voronoi:
             # s_new est donc le segment qui va de s_edge au premier point qui interromp le parcours du bord depuis s_edge dans la direction : direction
 
         if n == 2:
-            assert(s_edge.y == 500) # bord haut du canvas
+            assert(s_edge.y == 500)
             Ls =[]
             Lx = []
             for s2 in self.output:
@@ -638,7 +638,7 @@ class Voronoi:
                     corner = (True,Point(500,500))
 
         if n == 3:
-            assert(s_edge.x == 0) # bord gauche du canvas
+            assert(s_edge.x == 0)
             Ls =[]
             Ly = []
             for s2 in self.output:
@@ -678,7 +678,7 @@ class Voronoi:
                     corner = (True,Point(0,500))
 
         if n == 4:
-            assert(s_edge.y == 0) # bord bas du canvas
+            assert(s_edge.y == 0)
             Ls =[]
             Lx = []
             for s2 in self.output:
@@ -716,8 +716,7 @@ class Voronoi:
                 else:
                     s_new.finish(Point(0,0))
                     corner = (True,Point(0,0))
-        #x8 = s_new.end.x
-        #y8 = s_new.end.y
+
         p_center = Point(s_new.start.x/2 + s_new.end.x/2, s_new.start.y/2 + s_new.end.y/2)
         d1 = s.p1.distance(p_center)
         d2 = -1
