@@ -1,0 +1,6 @@
+numpy==1.20.3
+matplotlib-base=3.4.3=py39h49ac443_0
+mkl_random=1.2.2=py39hf11a4ad_0
+tk=8.6.11=h2bbff1b_0
+
+
