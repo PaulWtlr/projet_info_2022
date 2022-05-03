@@ -5,6 +5,7 @@ import tkinter as tk
 import heapq
 import itertools
 import random
+from DataType import *
 
 
 class Voronoi:
@@ -308,29 +309,7 @@ class Voronoi:
 
         return Ls_edge
 
-    def finish_edges(self):
-        l = self.x1 + (self.x1 - self.x0) + (self.y1 - self.y0)
-        i = self.arc
-        while i.pnext != None:
-            if i.s1 != None:
-                p = self.intersection(i.p, i.pnext.p, l*2.0)
-                i.s1.finish(p)
-            i = i.pnext
-
-        self.clean_output()
-        for s in self.output:
-            s.inter_edge()
-
-        Ls_edge = self.correct_belonging()
-
-        # print(len(Ls_edge))
-        # for s in Ls_edge:
-        #    print('start',(int(s.start.x), int(s.start.y)),'end', (int(s.end.x), int(s.end.y)))
-        self.output += Ls_edge
-        # for s in self.output:
-        #    s.actu_score()
-
-        self.upd_pol(self.points_save)
+    
 
     def is_in_large(self, s1, s2):
         if s1.start.x == s1.end.x and s2.start.x == s2.end.x and s1.start.x == s2.start.x:
@@ -367,6 +346,23 @@ class Voronoi:
                     return True
         else:
             return False
+        
+    def finish_edges(self):
+        l = self.x1 + (self.x1 - self.x0) + (self.y1 - self.y0)
+        i = self.arc
+        while i.pnext != None:
+            if i.s1 != None:
+                p = self.intersection(i.p, i.pnext.p, l*2.0)
+                i.s1.finish(p)
+            i = i.pnext
+        
+        #nous verrons plus tard cette seconde partie elle est affichée ici car nous montrons les versions finales de chaques partie du code pour ne pas perdre le lecteur
+        self.clean_output()
+        for s in self.output :
+            s.inter_edge()
+            
+       
+        Ls_edge = self.correct_belonging()
 
     def next_edge(self, n, direction, s, s_edge):  # fonction qui a un segment s ayant pour extremité s_edge sur le bord n du canvas trouve le segment ininterrompu qui longe c bord dans le direction : direction (=1 pour montée =0 pour descente en regardant le bord gauche)
         s_new = Segment(s_edge)

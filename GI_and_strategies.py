@@ -5,8 +5,8 @@ import tkinter as tk
 import heapq
 import itertools
 import random
-import DataType
-import VoronoiGame
+from DataType import *
+from VoronoiGame import *
 
 
 class MainWindow:
@@ -289,6 +289,7 @@ class MainWindow:
             self.score_user = int(1000*vp.player.score /
                                   (vp.bot.score + vp.player.score+1))/10
             self.score_bot = int(
+
                 1000*vp.bot.score/(vp.bot.score + vp.player.score+1))/10
 
             self.score_user_variable.set(f'Score Joueur 1: {self.score_user}%')
