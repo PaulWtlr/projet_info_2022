@@ -1072,25 +1072,25 @@ class MainWindow:
 
         #Bouton de choix du mode jeu
         self.btn2users = tk.Button(self.frmButton, text='Mode de jeu 2 joueurs', width=25, command=self.mode_2_users)
-        self.btn2users.pack(side=tk.LEFT)
+        self.btn2users.pack(side=tk.RIGHT)
 
         #Bouton de choix de la stratégie de l'ordinateur#
         self.btnGreedyBot = tk.Button(self.frmButton, text='Stratégie Bonne Pioche', width=25, command=self.BonnePiocheBot)
-        self.btnGreedyBot.pack(side=tk.LEFT)
+        self.btnGreedyBot.pack(side=tk.RIGHT)
 
         self.btnAntiGagnantBot = tk.Button(self.frmButton, text='Stratégie Anti Gagnant', width=25, command=self.AntiGagnantBot)
-        self.btnAntiGagnantBot.pack(side=tk.LEFT)
+        self.btnAntiGagnantBot.pack(side=tk.RIGHT)
 
         self.btnDBCBot = tk.Button(self.frmButton, text='Stratégie DBC', width=25, command=self.DBCBot)
-        self.btnDBCBot.pack(side=tk.LEFT)
+        self.btnDBCBot.pack(side=tk.RIGHT)
 
         self.btnrandomBot = tk.Button(self.frmButton, text='Placement aléatoire (Par défaut)', width=25, command=self.randomBot)
-        self.btnrandomBot.pack(side=tk.LEFT)
+        self.btnrandomBot.pack(side=tk.RIGHT)
 
 
         #Bouton de reset du jeu#
         self.btnClear = tk.Button(self.frmButton, text='Rejouer', width=25, command=self.onClickClear)
-        self.btnClear.pack(side=tk.LEFT)
+        self.btnClear.pack(side=tk.RIGHT)
 
 
         #Affichage des scores du joueurs et du bot#
@@ -1275,11 +1275,11 @@ class MainWindow:
 
                 #Actualisation du score du joueur et du bot #
 
-                self.score_user = 100*vp.player.score/(vp.bot.score + vp.player.score+1)
-                self.score_bot = 100*vp.bot.score/(vp.bot.score + vp.player.score+1)
+                self.score_user = int(1000*vp.player.score/(vp.bot.score + vp.player.score+1))/10
+                self.score_bot = int(1000*vp.bot.score/(vp.bot.score + vp.player.score+1))/10
 
-                self.score_user_variable.set(f'Score Joueur: {self.score_user}')
-                self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
+                self.score_user_variable.set(f'Score Joueur: {self.score_user}%')
+                self.score_bot_variable.set(f'Score Bot: {self.score_bot}%')
 
                 #Tracer du diagramme de Voronoï
                 self.drawPolygonOnCanvas(vp)
@@ -1320,11 +1320,11 @@ class MainWindow:
             lines = vp.get_output()
 
             #Actualisation du score des joueurs
-            self.score_user = 100*vp.player.score/(vp.bot.score + vp.player.score+1)
-            self.score_bot = 100*vp.bot.score/(vp.bot.score + vp.player.score+1)
+            self.score_user = int(1000*vp.player.score/(vp.bot.score + vp.player.score+1))/10
+            self.score_bot = int(1000*vp.bot.score/(vp.bot.score + vp.player.score+1))/10
 
-            self.score_user_variable.set(f'Score Joueur 1: {self.score_user}')
-            self.score_bot_variable.set(f'Score Joueur 2: {self.score_bot}')
+            self.score_user_variable.set(f'Score Joueur 1: {self.score_user}%')
+            self.score_bot_variable.set(f'Score Joueur 2: {self.score_bot}%')
 
 
             #Tracer du diagramme de Voronoï
@@ -1384,7 +1384,7 @@ class MainWindow:
                 self.w.pack()
 
             elif self.score_user < self.score_bot:
-                self.w.create_text(250, 300, text="Le Joueur bleu a gagné'", fill="blue", font=('Helvetica 15 bold'))
+                self.w.create_text(250, 300, text="Le Joueur bleu a gagné", fill="blue", font=('Helvetica 15 bold'))
                 self.w.pack()
 
             else:
