@@ -1,4 +1,12 @@
-
+import random as r
+import math
+import numpy as np
+import tkinter as tk
+import heapq
+import itertools
+import random
+import DataType
+import VoronoiGame
 ###################################################################################
 #-------------------------------PARTIE TKINTER------------------------------------#
 ###################################################################################
