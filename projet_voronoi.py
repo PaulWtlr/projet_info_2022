@@ -1,23 +1,25 @@
-##DataType
-
+import random as r
+import math
+import numpy as np
+import tkinter as tk
 import heapq
 import itertools
+import random
 
-import random as r
 
 
-# définir une fonction distance ; à partir de cette fonction on peut calculer le score de chaque joueur dès lors qu'on a la liste des segments associées à chaque joueur
+
 class Player:
-    pol = []
+    polygons = []
     n = None
 
-    def __init__(self,n, pol=[],score=0 ):
+    def __init__(self,n,score=0 ):
         self.n = n
-        self.pol = pol
+        self.polygons = []
         self.score = 0
 
-    def ajoute_seg(self,s):
-        self.pol.append(s)
+    def add_pol(self,pol):
+        self.polygons.append(pol)
 
 class Point:
     x = 0.0
@@ -29,10 +31,7 @@ class Point:
         self.player = player
 
     def distance(self, p):
-        return math.sqrt((self.x-p.x)**2+(self.y-p.y)**2)
-
-# Point(x,y) permet la création d'un point ayant pour coordonnées (x,y)
-
+        return math.sqrt((self.x-p.x)**2 + (self.y-p.y)**2)
 
 class Event:
     x = 0.0
@@ -47,9 +46,6 @@ class Event:
         self.p0 = p0
         self.p1 = p1
         self.valid = True
-# Event(x,p,a) permet la création d'un évènement initialement vrai
-
-
 class Arc:
     p = None
     pprev = None
@@ -70,11 +66,11 @@ class Arc:
 
 
 class Segment:
-    p1 = None
-    p2 = None
     start = None
     end = None
     done = False
+    p1 = None
+    p2 = None
     score1 = False
     score2 = False
 
@@ -99,64 +95,61 @@ class Segment:
         self.p2=p2
 
     def hauteur(self,p):
-        x0 = (self.p1.x + self.p2.x)/2
-        y0 = (self.p1.y + self.p2.y)/2
-        p_inter = Point(x0,y0)
-        print(p.distance(p_inter))
+        if self.end.x - self.start.x == 0 :
+            p_inter = Point(self.start.x, p.y)
+        if self.end.y - self.start.y == 0 :
+            p_inter = Point(p.x,self.start.y)
+        elif self.end.x - self.start.x != 0  :
+            a1 = (self.end.y - self.start.y) / (self.end.x - self.start.x)
+            a2 =  -1/a1 #pente de la droite perpendiculaire à self passant par p
+            x0 = (-a1*(self.start.x) + a2*(p.x) - (p.y) + (self.start.y))/(a2 - a1) # abscisse du point d'intersection des deux droites
+            y0 = a2*(x0 - p.x) + p.y
+            p_inter = Point(x0,y0)
+
         return p.distance(p_inter)
+
 
     def actu_score(self):
             if self.p1 != None and not self.score1:
                 self.p1.player.score += self.hauteur(self.p1)*(self.start.distance(self.end))/2
-                print(self.p1.player.score)
                 self.score1 = True
             if self.p2 != None and not self.score1:
                 self.p2.player.score += self.hauteur(self.p2)*(self.start.distance(self.end))/2
-                print(self.p2.player.score)
                 self.score2 = True
-            
-    
-    def inter_edge(self,p): # si on considère la boite abcd où a est le coin inférieur gauche b le coin inférieur droit alors le bords 1 est ab, 2 bc, 3 cd et 4da
+
+    def p_edge(self,p):  #renvoie l'intersection du Segment self avec le bord qui est dépassé par le segment
         if self.start.x - self.end.x != 0 :
-            x2 = 500
             a = (self.end.y - self.start.y)/(self.end.x - self.start.x)
-            y2 = a*(500 - self.start.x) + self.start.y 
+            x2 = 500
+            y2 = a*(500 - self.start.x) + self.start.y
             if 0 < y2 < 500 and p.x > self.p1.x :
                 return Point(x2,y2)
-            
+
             x2 = 0
-            a = (self.end.y - self.start.y)/(self.end.x - self.start.x)
-            y2 = -a*(self.start.x) + self.start.y 
+            y2 = a*(0 - self.start.x) + self.start.y
             if 0 < y2 < 500 and p.x < self.p1.x :
                 return Point(x2,y2)
-            
+
             y2 = 500
-            a = (self.end.y - self.start.y)/(self.end.x - self.start.x)
-            x2 = 500 / a - self.start.y/a + self.start.x
+            x2 = (500)/a - self.start.y/a + self.start.x
             if 0 < x2 < 500 and p.y > self.p1.y :
                 return Point(x2,y2)
-                    
+
             y2 = 0
-            a = (self.end.y - self.start.y)/(self.end.x - self.start.x)
-            x2 = - self.start.y/a + self.start.x
+            x2 = (-self.start.y)/a + self.start.x
             if 0 < x2 < 500 and p.y < self.p1.y :
                 return Point(x2,y2)
         elif p.y > 500:
             return Point(p.x, 500)
         else :
             return Point(p.x, 0)
-# Segment définit un segment [a,b] en 2 temps :
-# On commence par poser le point a :
-#   s=Segment(a)
-# Le segment est alors inachevé ie self.done=False
-# On pose alors le point b :
-#   s.finish(b)
-# On obtient le segment [a,b] achevé ie self.done=True
 
+    def inter_edge(self): # regarde si un Segment dépasse un bord, si oui remet son extrémité sur le bord du canvas
+        if self.start.x < 0 or self.start.x > 500 or self.start.y < 0 or self.start.y > 500:
+            self.start = self.p_edge(self.start)
 
-# Ainsi lorsqu'on effectue actu_score sur la liste des segments à la fin de l'algorithme on a le score de chaque joueur qui est calculé, pour cela on a simplement besoin de  :
-# avoir bien définit à quelle point est lié chaque segment et à quel joueur est lié chaque point
-
+        if self.end.x < 0 or self.end.x > 500 or self.end.y < 0 or self.end.y > 500:
+            self.end = self.p_edge(self.end)
 
 class PriorityQueue:
     def __init__(self):
@@ -165,9 +158,11 @@ class PriorityQueue:
         self.counter = itertools.count()
 
     def push(self, item):
-        if item in self.entry_finder: return # Si item est déjà dans la file on ne fait rien
+        # check for duplicate
+        if item in self.entry_finder: return
         count = next(self.counter)
-        entry = [item.x, count, item] # On utilise x en temps que clé primaire (raisonnable dans le cadre du problème)
+        # use x-coordinate as a primary key (heapq in python is min-heap)
+        entry = [item.x, count, item]
         self.entry_finder[item] = entry
         heapq.heappush(self.pq, entry)
 
@@ -181,7 +176,7 @@ class PriorityQueue:
             if item != 'Removed':
                 del self.entry_finder[item]
                 return item
-        raise KeyError('pop réalisé sur une file vide')
+        raise KeyError('pop from an empty priority queue')
 
     def top(self):
         while self.pq:
@@ -190,20 +185,14 @@ class PriorityQueue:
                 del self.entry_finder[item]
                 self.push(item)
                 return item
-        raise KeyError('top réalisé sur une file vide')
+        raise KeyError('top from an empty priority queue')
 
     def empty(self):
         return not self.pq
-# On réalise ici une file de priorité à l'aide du module python prévu à cet effet heapq
-# https://docs.python.org/3/library/heapq.html (pour plus d'informations sur ce module)
 
 
-##Voronoi
 
-
-import random
-import math
-
+# Source: (C++) http://www.cs.hmc.edu/~mbrubeck/voronoi.html
 
 class Voronoi:
     def __init__(self, points, player = Player(1), bot = Player(0)):
@@ -212,30 +201,29 @@ class Voronoi:
         self.output = [] # liste des segments qui forment le diagramme de Voronoï
         self.arc = None  # arbre binaire pour les paraboles
         self.points = PriorityQueue() # événements ponctuels
+        self.points_save = []
         self.event = PriorityQueue() # événements circulaires
 
         # On pose la boîte dans laquelle on trace la diagramme (bounding box)
-        self.x0 = -50.0
-        self.x1 = -50.0
-        self.y0 = 550.0
-        self.y1 = 550.0
+        self.x0 = 0.0
+        self.x1 = 0.0
+        self.y0 = 0.0
+        self.y1 = 0.0
 
         # Insertion des points en tant qu'évènements ponctuels
         for pts in points:
-            print(pts[2])
             if pts[2] == 0 :
                 point = Point(pts[0], pts[1], player = self.bot)
             else :
                 point = Point(pts[0], pts[1], player = self.player)
+            self.points_save.append(point)
             self.points.push(point)
             # On agrandit la boîte si nécessaire
             if point.x < self.x0: self.x0 = point.x
             if point.y < self.y0: self.y0 = point.y
             if point.x > self.x1: self.x1 = point.x
             if point.y > self.y1: self.y1 = point.y
-
-
-        # On ajoute une marge de sécurité à la boîte
+        # on ajoute des marges de sécurité
         dx = (self.x1 - self.x0 + 1) / 5.0
         dy = (self.y1 - self.y0 + 1) / 5.0
         self.x0 = self.x0 - dx
@@ -243,40 +231,59 @@ class Voronoi:
         self.y0 = self.y0 - dy
         self.y1 = self.y1 + dy
 
-        #print("Dimensions de la boîte : x0 =",self.x0,"y0 =", self.y0,"x1 =",self.x1,"y1 =", self.y1 )
+    def upd_pol(self,points):
+        for p in points:
+            pol=[]
+            for s in self.output:
+                if s.p1 is not None and (s.p1 == p or s.p2 == p):
+                    #point0 = (s.start.x, s.start.y)
+                    #point1 = (s.end.x, s.end.y)
+                    point0 = (int(s.start.x), int(s.start.y))
+                    point1 = (int(s.end.x),int(s.end.y))
+                    if point0 not in pol:
+                        pol.append(point0)
+                    if point1 not in pol:
+                        pol.append(point1)
+            if len(pol) > 0:
+                p.player.add_pol(pol)
+        sort(self.player.polygons)
+        sort(self.bot.polygons)
+
+    def act_score2(self):
+        self.player.score = area(self.player.polygons)
+        self.bot.score = area(self.bot.polygons)
+
 
     def process(self):
         while not self.points.empty():
             if not self.event.empty() and (self.event.top().x <= self.points.top().x):
-                self.process_event() # traite un évènement circulaire
+                self.process_event() # gère les évènements circulaires
             else:
-                self.process_point() # traite un évènement ponctuel
+                self.process_point() # gère les évènements ponctuels
 
-        # une fois tous les évènements circulaires traités, les évènements ponctuels restant sont traités
+        # après avoir traité les points les évènements circulaires restant sont traités
         while not self.event.empty():
             self.process_event()
 
         self.finish_edges()
 
     def process_point(self):
-        # get next event from site pq
+        #on récupère l'évènement ponctuel de la file de priorité
         p = self.points.pop()
-        #print("Process Point : x =", p.x,",y =", p.y)
-        # add new arc (parabola)
+        # ajoute la nouvelle parabole au front parabolique
         self.arc_insert(p)
 
     def process_event(self):
-        # get next event from circle pq
+        # on récupère l'évènement circulaire de la file de priorité
         e = self.event.pop()
-        #print("Process Event : x =", e.x)
+
 
         if e.valid:
-            # start new edge
+            # début d'un nouveau segment
             s = Segment(e.p, p1 = e.p0, p2 = e.p1)
             self.output.append(s)
-            #print("Add segment : S(", s.start,"-", s.end,")",'p12_segment',s.p1,s.p2)
 
-            # remove associated arc (parabola)
+            # on enlève la parabole "engloutie"
             a = e.a
             if a.pprev is not None:
                 a.pprev.pnext = a.pnext
@@ -285,12 +292,12 @@ class Voronoi:
                 a.pnext.pprev = a.pprev
                 a.pnext.s0 = s
 
-            # finish the edges before and after a
+            # termine les segments qui atteignent le noeud
             if a.s0 is not None:
                 a.s0.finish(e.p)
             if a.s1 is not None:
                 a.s1.finish(e.p)
-            # recheck circle events on either side of p
+            # on regarde alors si cette intervention a permit la création d'autres évènements circulaires
             if a.pprev is not None: self.check_circle_event(a.pprev, e.x)
             if a.pnext is not None: self.check_circle_event(a.pnext, e.x)
 
@@ -299,12 +306,12 @@ class Voronoi:
         if self.arc is None:
             self.arc = Arc(p)
         else:
-            # find the current arcs at p.y
+            # trouve l'arc parabolique à actualiser
             i = self.arc
             while i is not None:
                 flag, z = self.intersect(p, i)
                 if flag:
-                    # new parabola intersects arc i
+                    # nouvelle parabole qui intersecte le front i
                     flag, zz = self.intersect(p, i.pnext)
                     if (i.pnext is not None) and (not flag):
                         i.pnext.pprev = Arc(i.p, player = i.p.player ,a = i, b = i.pnext)
@@ -313,13 +320,13 @@ class Voronoi:
                         i.pnext = Arc(i.p, player = i.p.player ,a = i)
                     i.pnext.s1 = i.s1
 
-                    # add p between i and i.pnext
+                    # ajout de p entre les paraboles i.p et i.pnext
                     i.pnext.pprev = Arc(p, player = p.player, a = i, b = i.pnext)
                     i.pnext = i.pnext.pprev
 
-                    i = i.pnext # now i points to the new arc
+                    i = i.pnext # on actualise alors i
 
-                    # add new half-edges connected to i's endpoints
+                    # on ajoute alors les segments qui sont formés comme vu dans la partie théorique
                     seg = Segment(z, p1 = p, p2 = i.p)
                     self.output.append(seg)
                     i.pprev.s1 = i.s0 = seg
@@ -328,7 +335,7 @@ class Voronoi:
                     self.output.append(seg)
                     i.pnext.s0 = i.s1 = seg
 
-                    # check for new circle events around the new arc
+                    # on n'oublie pas de regarder si nous avons engendrer des évènements circulaires
                     self.check_circle_event(i, p.x)
                     self.check_circle_event(i.pprev, p.x)
                     self.check_circle_event(i.pnext, p.x)
@@ -337,13 +344,13 @@ class Voronoi:
 
                 i = i.pnext
 
-            # if p never intersects an arc, append it to the list
+            # si p n'intersecte pas le front on l'ajoute à la liste
             i = self.arc
             while i.pnext is not None:
                 i = i.pnext
             i.pnext = Arc(p, player = p.player, a = i)
 
-            # insert new segment between p and i
+            # on ajoute un nouveau segment entre p et et i
             x = self.x0
             y = (i.pnext.p.y + i.p.y) / 2.0;
             start = Point(x, y)
@@ -353,7 +360,7 @@ class Voronoi:
             self.output.append(seg)
 
     def check_circle_event(self, i, x0):
-        # look for a new circle event for arc i
+        # regarde si un nouvel évènement circulaire va se produire sur le front i lorsque la droite de balayage va atteindre x0
         if (i.e is not None) and (i.e.x  != self.x0):
             i.e.valid = False
         i.e = None
@@ -366,7 +373,6 @@ class Voronoi:
             self.event.push(i.e)
 
     def circle(self, a, b, c):
-        # check if bc is a "right turn" from ab
         if ((b.x - a.x)*(c.y - a.y) - (c.x - a.x)*(b.y - a.y)) > 0: return False, None, None
 
         # Joseph O'Rourke, Computational Geometry in C (2nd ed.) p.189
@@ -378,42 +384,40 @@ class Voronoi:
         F = C*(a.x + c.x) + D*(a.y + c.y)
         G = 2*(A*(c.y - b.y) - B*(c.x - b.x))
 
-        if (G == 0): return False, None, None # Points are co-linear
+        if (G == 0): return False, None, None # Points alignés
 
-        # point o is the center of the circle
+        # point o au centre du cercle
         ox = 1.0 * (D*E - B*F) / G
         oy = 1.0 * (A*F - C*E) / G
 
-        # o.x plus radius equals max x coord
+        # o.x plus le rayon égale max x coord
         x = ox + math.sqrt((a.x-ox)**2 + (a.y-oy)**2)
         o = Point(ox, oy)
 
         return True, x, o
 
     def intersect(self, p, i):
-        # check whether a new parabola at point p intersect with arc i
+        # regarde si la parabole associé à p intersect l'arc i
         if (i is None): return False, None
         if (i.p.x == p.x): return False, None
 
         a = 0.0
         b = 0.0
 
-        if i.pprev is not None:
+        if i.pprev != None:
             a = (self.intersection(i.pprev.p, i.p, 1.0*p.x)).y
-        if i.pnext is not None:
+        if i.pnext != None:
             b = (self.intersection(i.p, i.pnext.p, 1.0*p.x)).y
 
         if (((i.pprev is None) or (a <= p.y)) and ((i.pnext is None) or (p.y <= b))):
             py = p.y
             px = 1.0 * ((i.p.x)**2 + (i.p.y-py)**2 - p.x**2) / (2*i.p.x - 2*p.x)
             res = Point(px, py)
-            #print("Intersect point p(", p.x,",", p.y, ") and arc(", i.p.x,",", i.p.y, ") on point I(", px,",",py,")")
             return True, res
-        #print("No intersect")
         return False, None
 
     def intersection(self, p0, p1, l):
-        # fournit l'intersection de 2 paraboles
+        # donne l'intersection des paraboles associés à p0(l) et p1(l) où l est l'abscisse de la droite de balayage
         p = p0
         if (p0.x == p1.x):
             py = (p0.y + p1.y) / 2.0
@@ -423,7 +427,6 @@ class Voronoi:
             py = p0.y
             p = p1
         else:
-            # use quadratic formula
             z0 = 2.0 * (p0.x - l)
             z1 = 2.0 * (p1.x - l)
 
@@ -436,239 +439,581 @@ class Voronoi:
         px = 1.0 * (p.x**2 + (p.y-py)**2 - l**2) / (2*p.x-2*l)
         res = Point(px, py)
         return res
-    
+
     def clean_output(self):
+        for s1 in self.output:
+            if s1.end is None :
+                self.output.remove(s1)
+
         for s1 in self.output:
             for s2 in self.output:
                 if s1 != s2 and [s1.start.x, s1.start.y, s1.end.x, s1.end.y] == [s2.start.x, s2.start.y, s2.end.x, s2.end.y]:
-                    self.output.remove()
+                    self.output.remove(s2)
+
+    def correct_belonging(self):
+        self.clean_output()
+        Ls_edge = self.correct_seg()
+
+
+        for s in self.output:
+            assert s not in Ls_edge, 's est traité comme un non bord'
+            p_aux = Point(s.start.x/2 + s.end.x/2,s.start.y/2 + s.end.y/2)
+            Lp = [ p for p in self.points_save]
+            Ld = [ p_aux.distance(p) for p in self.points_save]
+
+
+            i = Ld.index(min(Ld))
+            p1 = Lp[i]
+            Lp.remove(p1)
+            Ld.remove(Ld[i])
+            i2 = Ld.index(min(Ld))
+            p2 = Lp[i2]
+
+
+            s.p1 = p1
+            s.p2 = p2
+
+
+
+        for s in Ls_edge:
+            p_aux = Point(s.start.x/2 + s.end.x/2,s.start.y/2 + s.end.y/2)
+
+            Lp = [ p for p in self.points_save]
+            Ld = [ p_aux.distance(p) for p in self.points_save]
+
+
+            i = Ld.index(min(Ld))
+            p1 = Lp[i]
+            s.p1 = p1
+            s.p2 = None
+
+        return Ls_edge
+
+
 
     def finish_edges(self):
-        
         l = self.x1 + (self.x1 - self.x0) + (self.y1 - self.y0)
         i = self.arc
-        while i.pnext is not None:
-            if i.s1 is not None:
+        while i.pnext != None:
+            if i.s1 != None:
                 p = self.intersection(i.p, i.pnext.p, l*2.0)
                 i.s1.finish(p)
-                p_bord = i.s1.inter_edge(p)
-                i.s1.finish(p_bord, edge = True)
             i = i.pnext
-        
-        s_edge=[]
-        
-        def next_edge(x,y,p1,p2):
-            for s1 in self.output:
-                if x == 0 or x == 500 :
-                    if s1.start.x == x and s1.start.y > y :
-                        p = p1
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.start.y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.start.y))
-                            s_edge.append(s)
-                        p = p2
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.start.y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.start.y))
-                            s_edge.append(s)
-                            
-                    elif s1.done and s1.end.x == x and s1.end.y > y :
-                        p = p1
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.end.y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.end.y))
-                            s_edge.append(s)
-                        p = p2
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.end.y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.end.y))
-                            s_edge.append(s)
-                            
-                    else :
-                        if s1.p1.y > s1.p2.y :
-                            s = Segment(Point(x,y), p1 = s1.p1)
-                        else :
-                            s = Segment(Point(x,y), p1 = s1.p2)
-                        s.finish(Point(x,500))
-                        s_edge.append(s)
-                    
-                    
-                    if s1.start.x == x and s1.start.y < y :
-                        p = p1
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.start.y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.start.y))
-                            s_edge.append(s)
-                        p = p2
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.start.y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.start.y))
-                            s_edge.append(s)
-                            
-                    elif s1.done and s1.end.x == x and s1.end.y < y :
-                        p = p1
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.end.y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.end.y))
-                            s_edge.append(s)
-                        p = p2
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.end.y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(x,s1.end.y))
-                            s_edge.append(s)
-                    else :
-                        if s1.p1.y < s1.p2.y :
-                            s = Segment(Point(x,y), p1 = s1.p1)
-                        else :
-                            s = Segment(Point(x,y), p1 = s1.p2)
-                        s.finish(Point(x,0))
-                        s_edge.append(s)
-                    
-                elif y == 0 or y == 500 :
-                     
-                    if s1.start.y == y and s1.start.x > x :
-                        p = p1
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.start.x,y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.start.x,y))
-                            s_edge.append(s)
-                        p = p2
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.start.x,y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.start.x,y))
-                            s_edge.append(s)
-                            
-                    if s1.done and s1.end.y == y and s1.end.x > x :
-                        p = p1
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.end.x,y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.end.x,y))
-                            s_edge.append(s)
-                        p = p2
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.end.x,y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.end.x,y))
-                            s_edge.append(s)
-                            
-                    else :
-                        if s1.p1.x < s1.p2.x :
-                            s = Segment(Point(x,y), p1 = s1.p1)
-                        else :
-                            s = Segment(Point(x,y), p1 = s1.p2)
-                        s.finish(Point(500,y))
-                        s_edge.append(s)
-                    
-                    
-                    if s1.start.y == y and s1.start.x < x :
-                        p = p1
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.start.x,y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.start.x,y))
-                            s_edge.append(s)
-                        p = p2
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.start.x,y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.start.x,y))
-                            s_edge.append(s)
-                            
-                    if s1.done and s1.end.y == y and s1.end.x < x :
-                        p = p1
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.end.x,y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.end.x,y))
-                            s_edge.append(s)
-                        p = p2
-                        if s1.p1 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.end.x,y))
-                            s_edge.append(s)
-                        elif s1.p2 == p :
-                            s = Segment(Point(x,y), p1 = p)
-                            s.finish(Point(s1.end.x,y))
-                            s_edge.append(s)
-                            
-                    else :
-                        if s1.p1.x < s1.p2.x :
-                            s = Segment(Point(x,y), p1 = s1.p1)
-                        else :
-                            s = Segment(Point(x,y), p1 = s1.p2)
-                        s.finish(Point(0,y))
-                        s_edge.append(s)
-        
-        for s1 in self.output:
-            if (s1.start.x or s1.start.y) in {500,0}:
-                print("hello")
-                next_edge(s1.start.x,s1.start.y,s1.p1,s1.p2)
-                n = 0
-                while ((s_edge[-1].start.x,s_edge[-1].start.y) or (s_edge[-1].end.x,s_edge[-1].end.y)) in [(0,0),(0,500),(500,0),(500,500)] and n <= 4:
-                     next_edge(s_edge[-1].start.x,s_edge[-1].start.y,s_edge[-1].p1,s_edge[-1].p2)
-                     n += 1
+
+        self.clean_output()
+        for s in self.output :
+            s.inter_edge()
+
+
+        Ls_edge = self.correct_belonging()
+
+
+        #print(len(Ls_edge))
+        #for s in Ls_edge:
+        #    print('start',(int(s.start.x), int(s.start.y)),'end', (int(s.end.x), int(s.end.y)))
+        self.output += Ls_edge
+        #for s in self.output:
+        #    s.actu_score()
+
+        self.upd_pol(self.points_save)
+
+    def is_in_large(self,s1,s2):
+        if s1.start.x == s1.end.x and s2.start.x == s2.end.x and s1.start.x == s2.start.x:
+            if s1.start.y < s1.end.y :
+                if (s1.start.y >= s2.start.y and s1.end.y <= s2.end.y) or (s1.start.y >= s2.end.y and s1.end.y <= s2.start.y):
+                    return True
+            if s1.start.y >= s1.end.y :
+                if (s1.end.y >= s2.start.y and s1.start.y <= s2.end.y) or (s1.end.y >= s2.end.y and s1.start.y <= s2.start.y):
+                    return True
+        elif s1.start.y == s1.end.y and s2.start.y == s2.end.y and s1.start.y == s2.start.y:
+            if s1.start.x <= s1.end.x :
+                if (s1.start.x >= s2.start.x and s1.end.x <= s2.end.x) or (s1.start.x >= s2.end.x and s1.end.x <= s2.start.x):
+                    return True
+            if s1.start.x > s1.end.x :
+                if (s1.end.x >= s2.start.x and s1.start.x <= s2.end.x) or (s1.end.x >= s2.end.x and s1.start.x <= s2.start.x):
+                    return True
+        else :
+            return False
+
+    def is_in(self,s1,s2):
+        if s1.start.x == s1.end.x and s2.start.x == s2.end.x and s1.start.x == s2.start.x:
+            if s1.start.y < s1.end.y :
+                if (s1.start.y > s2.start.y and s1.end.y < s2.end.y) or (s1.start.y > s2.end.y and s1.end.y < s2.start.y):
+                    return True
+            if s1.start.y > s1.end.y :
+                if (s1.end.y > s2.start.y and s1.start.y < s2.end.y) or (s1.end.y > s2.end.y and s1.start.y < s2.start.y):
+                    return True
+        elif s1.start.y == s1.end.y and s2.start.y == s2.end.y and s1.start.y == s2.start.y:
+            if s1.start.x < s1.end.x :
+                if (s1.start.x > s2.start.x and s1.end.x < s2.end.x) or (s1.start.x > s2.end.x and s1.end.x < s2.start.x):
+                    return True
+            if s1.start.x > s1.end.x :
+                if (s1.end.x > s2.start.x and s1.start.x < s2.end.x) or (s1.end.x > s2.end.x and s1.start.x < s2.start.x):
+                    return True
+        else :
+            return False
+
+    def next_edge(self,n,direction,s,s_edge): # fonction qui a un segment s ayant pour extremité s_edge sur le bord n du canvas trouve le segment ininterrompu qui longe c bord dans le direction : direction (=1 pour montée =0 pour descente en regardant le bord gauche)
+        s_new = Segment(s_edge)
+        corner = (False,Point(-1,-1))
+        if n == 1:
+            assert(s_edge.x == 500) # bord gauche du canvas
+            Ls =[]
+            Ly = []
+            for s2 in self.output:
+                if direction == 1 :
+                    b2 = s2.start.y > s_edge.y
+                else :
+                    b2 = s2.start.y < s_edge.y
+
+                if s2.start.x == 500 and b2 : #si un segment interromp le longement du bord on le note
+                    Ls.append((s2,'s'))
+                    Ly.append(s2.start.y)
+
+                if direction == 1 and s2.end != None:
+                    b2 = s2.end.y > s_edge.y
+                elif s2.end != None :
+                    b2 = s2.end.y < s_edge.y
+
+                if s2.end != None and s2.end.x == 500 and b2 :
+                    Ls.append((s2,'e'))
+                    Ly.append(s2.end.y)
+
+            if len(Ls) > 0 :
+                if direction == 1 :
+                    s0,str = Ls[Ly.index(min(Ly))]
+                else :
+                    s0,str = Ls[Ly.index(max(Ly))]
+                if str == 's' :
+                    s_new.finish(s0.start)
+                else :
+                    s_new.finish(s0.end)
+            else :
+                if direction == 1 :
+                    s_new.finish(Point(500,500))
+                    corner = (True,Point(500,500))
+                else:
+                    s_new.finish(Point(500,0))
+                    corner = (True,Point(500,0))
+            # s_new est donc le segment qui va de s_edge au premier point qui interromp le parcours du bord depuis s_edge dans la direction : direction
+
+        if n == 2:
+            assert(s_edge.y == 500)
+            Ls =[]
+            Lx = []
+            for s2 in self.output:
+                if direction == 1 :
+                    b2 = s2.start.x < s_edge.x
+                else :
+                    b2 = s2.start.x > s_edge.x
+
+                if s2.start.y == 500 and b2 : #si un segment interromp le longement du bord on le note
+                    Ls.append((s2,'s'))
+                    Lx.append(s2.start.x)
+
+                if direction == 1 and s2.end != None :
+                    b2 = s2.end.x < s_edge.x
+                elif s2.end != None :
+                    b2 = s2.end.x > s_edge.x
+
+                if s2.end != None and s2.end.y == 500 and b2 :
+                    Ls.append((s2,'e'))
+                    Lx.append(s2.end.x)
+
+            if len(Ls) > 0 :
+                if direction == 1:
+                    s0,str = Ls[Lx.index(max(Lx))]
+                else:
+                    s0,str = Ls[Lx.index(min(Lx))]
+                if str == 's' :
+                    s_new.finish(s0.start)
+                else :
+                    s_new.finish(s0.end)
+            else :
+                if direction == 1 :
+                    s_new.finish(Point(0,500))
+                    corner = (True,Point(0,500))
+                else:
+                    s_new.finish(Point(500,500))
+                    corner = (True,Point(500,500))
+
+        if n == 3:
+            assert(s_edge.x == 0)
+            Ls =[]
+            Ly = []
+            for s2 in self.output:
+                if direction == 1 :
+                    b2 = s2.start.y < s_edge.y
+                else :
+                    b2 = s2.start.y > s_edge.y
+
+                if s2.start.x == 0 and b2 : #si un segment interromp le longement du bord on le note
+                    Ls.append((s2,'s'))
+                    Ly.append(s2.start.y)
+
+                if direction == 1 and s2.end != None :
+                    b2 = s2.end.y < s_edge.y
+                elif s2.end != None :
+                    b2 = s2.end.y > s_edge.y
+
+                if s2.end != None and s2.end.x == 0 and b2 :
+                    Ls.append((s2,'e'))
+                    Ly.append(s2.end.y)
+
+            if len(Ls) > 0 :
+                if direction == 1:
+                    s0,str = Ls[Ly.index(max(Ly))]
+                else:
+                    s0,str = Ls[Ly.index(min(Ly))]
+                if str == 's' :
+                    s_new.finish(s0.start)
+                else :
+                    s_new.finish(s0.end)
+            else :
+                if direction == 1 :
+                    s_new.finish(Point(0,0))
+                    corner = (True,Point(0,0))
+                else:
+                    s_new.finish(Point(0,500))
+                    corner = (True,Point(0,500))
+
+        if n == 4:
+            assert(s_edge.y == 0)
+            Ls =[]
+            Lx = []
+            for s2 in self.output:
+                if direction == 1 :
+                    b2 = s2.start.x > s_edge.x
+                else :
+                    b2 = s2.start.x < s_edge.x
+
+                if s2.start.y == 0 and b2 : #si un segment interromp le longement du bord on le note
+                    Ls.append((s2,'s'))
+                    Lx.append(s2.start.x)
+
+                if direction == 1 and s2.end != None :
+                    b2 = s2.end.x < s_edge.x
+                else :
+                    b2 = s2.end.x > s_edge.x
+
+                if s2.end != None and s2.end.y == 0 and b2 :
+                    Ls.append((s2,'e'))
+                    Lx.append(s2.end.x)
+
+            if len(Ls) > 0 :
+                if direction == 1:
+                    s0,str = Ls[Lx.index(min(Lx))]
+                else:
+                    s0,str = Ls[Lx.index(max(Lx))]
+                if str == 's' :
+                    s_new.finish(s0.start)
+                else :
+                    s_new.finish(s0.end)
+            else :
+                if direction == 1 :
+                    s_new.finish(Point(500,0))
+                    corner = (True,Point(500,0))
+                else:
+                    s_new.finish(Point(0,0))
+                    corner = (True,Point(0,0))
+
+        p_center = Point(s_new.start.x/2 + s_new.end.x/2, s_new.start.y/2 + s_new.end.y/2)
+        d1 = s.p1.distance(p_center)
+        d2 = -1
+        if s.p2 is not None :
+            d2 = s.p2.distance(p_center)
+        if d2 > 0 and d2 < d1 :
+            s_new.p1 = s.p2
+        else :
+            s_new.p1 = s.p1
+
+        return s_new,corner
+
+
+    def correct_seg(self):
+
+        Ls_edge = []
+
         for s in self.output:
-            print(s.start.x)
-        for s in s_edge :
-            s.actu_score()
-        return s_edge
-        
+            if s.start.x == 500 :
+                s_new, b_corner = self.next_edge(1,0,s,s.start)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 1
+                dir = -1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,0,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+                s_new, b_corner = self.next_edge(1,1,s,s.start)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 1
+                dir = 1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,1,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+            if s.start.y == 500 :
+                s_new, b_corner = self.next_edge(2,0,s,s.start)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 2
+                dir = -1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,0,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+                s_new, b_corner = self.next_edge(2,1,s,s.start)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 2
+                dir = 1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,1,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+            if s.start.x == 0 :
+                s_new, b_corner = self.next_edge(3,0,s,s.start)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 3
+                dir = -1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,0,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+                s_new, b_corner = self.next_edge(3,1,s,s.start)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 3
+                dir = 1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,1,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+            if s.start.y == 0 :
+                s_new, b_corner = self.next_edge(4,0,s,s.start)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 4
+                dir = -1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,0,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+                s_new, b_corner = self.next_edge(4,1,s,s.start)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 4
+                dir = 1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,1,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+        #on fait pareil avec les s.end
+
+            if s.end.x == 500 :
+                s_new, b_corner = self.next_edge(1,0,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 1
+                dir = -1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,0,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+                s_new, b_corner = self.next_edge(1,1,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 1
+                dir = 1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,1,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+            if s.end.y == 500 :
+                s_new, b_corner = self.next_edge(2,0,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 2
+                dir = -1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,0,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+                s_new, b_corner = self.next_edge(2,1,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 2
+                dir = 1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,1,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+            if s.end.x == 0 :
+                s_new, b_corner = self.next_edge(3,0,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 3
+                dir = -1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,0,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+                s_new, b_corner = self.next_edge(3,1,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 3
+                dir = 1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,1,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+            if s.end.y == 0 :
+                s_new, b_corner = self.next_edge(4,0,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 4
+                dir = -1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,0,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+
+                s_new, b_corner = self.next_edge(4,1,s,s.end)
+                Ls_edge.append(s_new)
+                bool, corner = b_corner
+                k = 0
+                n0 = 4
+                dir = 1
+                while bool and k < 4:
+                    n0 += dir
+                    n0 = n0 % 4
+                    if n0 == 0 :
+                        n0 = 4
+                    s_new, b_corner = self.next_edge(n0,1,s,corner)
+                    Ls_edge.append(s_new)
+                    bool, corner = b_corner
+                    k += 1
+        for s1 in Ls_edge:
+            for s2 in Ls_edge:
+                if s1 != s2 and [int(s1.start.x), int(s1.start.y), int(s1.end.x), int(s1.end.y)] == [int(s2.start.x), int(s2.start.y), int(s2.end.x), int(s2.end.y)]:
+                    Ls_edge.remove(s2)
+                elif s1 != s2 and [int(s1.start.x), int(s1.start.y), int(s1.end.x), int(s1.end.y)] == [int(s2.end.x), int(s2.end.y), int(s2.start.x), int(s2.start.y)]:
+                    Ls_edge.remove(s2)
+                elif [int(s2.start.x), int(s2.start.y)] == [int(s2.end.x), int(s2.end.y)]:
+                    Ls_edge.remove(s2)
+                elif s1 != s2 and self.is_in_large(s1,s2):
+                    Ls_edge.remove(s2)
+
+        return Ls_edge
+
+
     def print_output(self):
         it = 0
         for o in self.output:
@@ -677,54 +1022,27 @@ class Voronoi:
             p1 = o.end
             print (p0.x, p0.y, p1.x, p1.y)
 
+        for s in self.finish_edges():
+            s0 = s.start
+            s1 = s.end
+            res.append((s0.x, s0.y, s1.x, s1.y))
+
     def get_output(self):
         res = []
         for o in self.output:
             p0 = o.start
             p1 = o.end
             res.append((p0.x, p0.y, p1.x, p1.y))
-        for s in self.finish_edges():
-            s0 = s.start
-            s1 = s.end
-            res.append((s0.x, s0.y, s1.x, s1.y))
-        print('SCORE DU JOUEUR:',int(self.player.score),'SCORE DU BOT:',int(self.bot.score))
-        
         return res
 
+
+
+colors=["blue","green","red","yellow","purple"]
 
 ###################################################################################
 #-------------------------------PARTIE TKINTER------------------------------------#
 ###################################################################################
-"""
-Dans cette partie, nous avons implémenté le jeu de Voronoï. Dans notre projet,
-chaque joueur possède 5 points à placer. Les stratégies que nous avons implémentées 
-sont les suivantes: 
-    
-1) La stratégie gloutonne ou greedy: A chaque coup, le bot joue le coup qui 
-    maximise son score. Comme le nombre de coup possible est infini nous discrétisons
-    la surface de jeu en une grille de 20x20 soit 400 coup possibles pour le bot.
- 
-2) La stratégie MCTS (Monte-Carlo-Tree-Search): Pour chacun des 400 coups possibles
-    le bot simule les 400 réponses possibles du joueur et calcul le score moyen des 
-    réponses du joueur. Le coup choisi est alors celui pour lequel le score moyen 
-    du joueur est le plus bas
-  
-3) La stratégie DBC (Defensive Balanced Cells): Une stratégie qui ne prend pas 
-    en compte les coups du joueur mais joue selon un patterne fixe bien défini.
-    La stratégie construit un diagramme dit "équilibré" ou "balanced".
-    On dit qu'un diagramme est équilibré si toutes les cellules le sont. Une cellule
-    est dite équilibré si il existe une droite qui passe par le germe/noyau qui
-    coupe la cellule en 2 parties d'aires égales. Pour plus de détails sur cette notion
-    consulter : https://helios2.mi.parisdescartes.fr/~bouzy/publications/bouzy-acg13.pdf 
-    page 7 """
 
-
-
-
-import tkinter as tk
-import numpy as np
-
-#  je veux une liste de int pour indiquer quel joueur joue quel point
 
 class MainWindow:
     # Rayon des points affichés sur le tkinter
@@ -734,9 +1052,9 @@ class MainWindow:
     LOCK_FLAG = False
 
     def __init__(self, master):
-        
-        
-        
+
+
+
         self.master = master
         self.master.title("Voronoi")
 
@@ -746,80 +1064,75 @@ class MainWindow:
         self.w = tk.Canvas(self.frmMain, width=500, height=500)
         self.w.config(background='white')
         self.w.bind('<Double-1>', self.onDoubleClick)
+
         self.w.pack()
 
         self.frmButton = tk.Frame(self.master)
         self.frmButton.pack()
 
-        self.btnCalculate = tk.Button(self.frmButton, text='Calculate', width=25, command=self.onClickCalculate)
-        self.btnCalculate.pack(side=tk.LEFT)
-        
+        #Bouton de choix du mode jeu
+        self.btn2users = tk.Button(self.frmButton, text='Mode de jeu 2 joueurs', width=25, command=self.mode_2_users)
+        self.btn2users.pack(side=tk.RIGHT)
+
         #Bouton de choix de la stratégie de l'ordinateur#
-        self.btnGreedyBot = tk.Button(self.frmButton, text='Stratégie Gloutonne', width=25, command=self.GreedyBot)
-        self.btnGreedyBot.pack(side=tk.LEFT)
-        
-        self.btnMCTSBot = tk.Button(self.frmButton, text='Stratégie MCTS', width=25, command=self.MCTSBot)
-        self.btnMCTSBot.pack(side=tk.LEFT)
-        
+        self.btnGreedyBot = tk.Button(self.frmButton, text='Stratégie Bonne Pioche', width=25, command=self.BonnePiocheBot)
+        self.btnGreedyBot.pack(side=tk.RIGHT)
+
+        self.btnAntiGagnantBot = tk.Button(self.frmButton, text='Stratégie Anti Gagnant', width=25, command=self.AntiGagnantBot)
+        self.btnAntiGagnantBot.pack(side=tk.RIGHT)
+
         self.btnDBCBot = tk.Button(self.frmButton, text='Stratégie DBC', width=25, command=self.DBCBot)
-        self.btnDBCBot.pack(side=tk.LEFT)
-        
-        
-        
+        self.btnDBCBot.pack(side=tk.RIGHT)
+
+        self.btnrandomBot = tk.Button(self.frmButton, text='Placement aléatoire (Par défaut)', width=25, command=self.randomBot)
+        self.btnrandomBot.pack(side=tk.RIGHT)
+
+
         #Bouton de reset du jeu#
-        self.btnClear = tk.Button(self.frmButton, text='Clear', width=25, command=self.onClickClear)
-        self.btnClear.pack(side=tk.LEFT)
-        
-        
+        self.btnClear = tk.Button(self.frmButton, text='Rejouer', width=25, command=self.onClickClear)
+        self.btnClear.pack(side=tk.RIGHT)
+
+
         #Affichage des scores du joueurs et du bot#
         self.score_user = 0
         self.score_user_variable = tk.StringVar(self.master, f'Score Joueur: {self.score_user}')
         self.score_user_lbl = tk.Label(self.master, textvariable=self.score_user_variable)
         self.score_user_lbl.pack()
-        
+
         self.score_bot = 0
         self.score_bot_variable = tk.StringVar(self.master, f'Score Bot: {self.score_bot}')
         self.score_bot_lbl = tk.Label(self.master, textvariable=self.score_bot_variable)
         self.score_bot_lbl.pack()
-        
-        
+
+
         #Variable de compteur de tour#
         self.count = 0
-        
+
         #Variable de choix de stratégie#
         self.strategy = 0
-    
-    
-    
-    # Pour le choix des stratégies, le bouton de chaque stratégie affecte une  
-    # valeur à la variable strategy qui vient changer la fonction de placement 
+
+
+        #Variable mode de jeu 1 ou 2 joueurs
+        self.game_mode = 0
+
+
+
+    def mode_2_users(self):
+        self.game_mode = 1
+    # Pour le choix des stratégies, le bouton de chaque stratégie affecte une
+    # valeur à la variable strategy qui vient changer la fonction de placement
     # de point du bot utilisé dans onDoubleClick
-    def GreedyBot(self):
+    def randomBot(self):
+        self.strategy = 0
+
+    def BonnePiocheBot(self):
         self.strategy = 1
-        
-    def MCTSBot(self):
+
+    def AntiGagnantBot(self):
         self.strategy = 2
-    
+
     def DBCBot(self):
         self.strategy = 3
-        
-    
-    #Définition du bouton Calculate#    
-    def onClickCalculate(self):
-        if not self.LOCK_FLAG:
-            self.LOCK_FLAG = True
-
-            pObj = self.w.find_all()
-            points = []
-            for p in pObj:
-                coord = self.w.coords(p)
-                points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS))
-
-            vp = Voronoi(points)
-            vp.process()
-            lines = vp.get_output()
-            self.drawLinesOnCanvas(lines)
-
 
     #Définition du bouton Clear : Clear reset le jeu#
     def onClickClear(self):
@@ -830,10 +1143,12 @@ class MainWindow:
         self.score_user_variable.set(f'Score Joueur: {self.score_user}')
         self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
         self.count = 0
-      
-        
-      
-        
+        self.strategy = 0
+        self.game_mode = 0
+
+
+
+
     #Donne le diagramme de Voronoi associé au point placés sur la fênetre tkinter #
     def get_vp(self):
         pObj = self.w.find_all()
@@ -848,123 +1163,261 @@ class MainWindow:
 
         vp = Voronoi(points)
         vp.process()
-        return vp    
-    
-    
-    
-    
+        vp.act_score2()
+        return vp
+
+
+
+
     #Placement du point aléatoirement #
-    def pc_place(self,points):
+    def random_place(self):
         #points est la liste de points déjà sur le plan on ajoute juste le point que place le bot
         x=r.random()*500
         y=r.random()*500
         self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "blue")
-        points.append((x,y,0))
-    
-    
-    
-    
-    
+
+
+
+
+
     #Placement du point selon la stratégie Defensive balanced cell#
 
-    def DBC_place(self,points): 
-        
-        DBC_list=[(350,350),(150,350),(350,150),(150,150),(250,250)] 
+    def DBC_place(self):
         #Cette liste contient les coordonnées d'un diagramme de Voronoï équilibré à 5 points
-        
+        DBC_list=[(400,400),(100,400),(400,100),(100,100),(250,250)]
+
+        #Cette liste contient une version legerement modifié de la liste précédente pour être plus imprévisible
+        play_list = [ (x + random.choice((-1, 1))*r.random()*25, y + random.choice((-1, 1))*r.random()*25) for (x,y) in DBC_list]
+
+
         i=self.count
-        (x,y)=DBC_list[i]
+        (x,y)=play_list[i]
         self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "blue")
-        points.append((x,y,0))
-        
-        
-        
-        
-    #Placement du point selon la stratégie gloutonne ou greedy#
-    def greedy_place(self,points):
-        
-        xy = [(i,j) for i in np.linspace(5,495,20) for j in np.linspace(5,495,20)] 
-        #Discrétisation du plan en une grille 20x20
-        
-        #Initialisation du max
+
+
+    def AntiGagnant_place(self):
+        if self.count == 0:
+            self.w.create_oval(250-self.RADIUS, 250-self.RADIUS, 250+self.RADIUS, 250+self.RADIUS, fill= "blue")
+        else:
+            vp = self.get_vp()
+            list_coords = vp.player.polygons
+            list_aire = [polygon_area(coords) for coords in list_coords]
+            i = list_aire.index(max(list_aire))
+            centre_pol_i = (sum([p[0] for p in list_coords[i]])/len(list_coords[i]),sum([p[1] for p in list_coords[i]])/len(list_coords[i]))
+
+            (x_play,y_play) = centre_pol_i
+            self.w.create_oval(x_play-self.RADIUS, y_play-self.RADIUS, x_play+self.RADIUS, y_play+self.RADIUS, fill= "blue")
+
+
+    #Placement du point selon la stratégie bonne pioche#
+
+    def BonnePioche_place(self):
+
+        xy = [(r.random()*500,r.random()*500) for i in range(20)]
+
+
         self.w.create_oval(xy[0][0]-self.RADIUS, xy[0][1]-self.RADIUS, xy[0][0]+self.RADIUS, xy[0][1]+self.RADIUS, fill= "yellow", tags = 'train')
         vp=self.get_vp()
-        maxi = vp.bot.score/(10**4)
+        maxi = vp.bot.score
         (x_play,y_play) = (0,0)
         self.w.delete("train")
-        
-        
+
+
         #Boucle de recherche du max
         for (x,y) in xy:
             self.w.create_oval(x-self.RADIUS, y-self.RADIUS, x+self.RADIUS, y+self.RADIUS, fill= "yellow", tags = 'train')
             vp = self.get_vp()
-            if vp.bot.score/(10**4) > maxi:
-                maxi = vp.bot.score/(10**4)
+            if vp.bot.score > maxi:
+                maxi = vp.bot.score
                 (x_play,y_play) = (x,y)
-            self.w.delete("train")       
+            self.w.delete("train")
         self.w.create_oval(x_play-self.RADIUS, y_play-self.RADIUS, x_play+self.RADIUS, y_play+self.RADIUS, fill= "blue")
-        points.append((x_play,y_play,0))    
 
     def onDoubleClick(self, event):
-        if not self.LOCK_FLAG:
-            self.w.create_oval(event.x-self.RADIUS, event.y-self.RADIUS, event.x+self.RADIUS, event.y+self.RADIUS, fill= "red")
 
-        self.LOCK_FLAG = True
-        #On efface les lignes du diagramme précédent
-        
-        self.w.delete("lines")
-        
-        #Calcul du diagramme de Voronoi via les points placés sur la fenêtre de jeu 
-        pObj = self.w.find_all()
-        points = []
-        for p in pObj:
-            if self.w.itemcget(p, "fill") == "red":
-                coord = self.w.coords(p)
-                points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS,1))
-            elif self.w.itemcget(p, "fill") == "blue":
-                coord = self.w.coords(p)
-                points.append((coord[0]+self.RADIUS, coord[1]+self.RADIUS,0))
-         
-                
-        #Selection de la stratégie du bot #
-        if self.strategy ==0:
-            self.pc_place(points)
-                
-                
-        elif self.strategy ==1:
-            self.greedy_place(points)
-            
-        
-        elif self.strategy ==3:
-            
-            self.DBC_place(points)
-        
+        #On vérifie d'abord le mode de jeu
 
-        vp = Voronoi(points)
-        vp.process()
-        lines = vp.get_output()
-        
-        
-        #Actualisation du score du joueur et du bot #
+        #Mode de jeu solo
+        if self.game_mode == 0:
 
-        self.score_user = vp.player.score/(10**4)
-        self.score_bot = vp.bot.score/(10**4)
+            #On vérifie si le jeu doit s'arreter
+            if self.count == 5:
+                self.check_winner()
 
-        self.score_user_variable.set(f'Score Joueur: {self.score_user}')
-        self.score_bot_variable.set(f'Score Bot: {self.score_bot}')
-        
+            else:
+                if not self.LOCK_FLAG:
+                    self.w.create_oval(event.x-self.RADIUS, event.y-self.RADIUS, event.x+self.RADIUS, event.y+self.RADIUS, fill= "red")
 
-        #Tracer du diagramme de Voronoï
-        self.drawLinesOnCanvas(lines)
-        
-        #Incrémentation du compteur de tour
-        self.count += 1
-        
-        self.LOCK_FLAG = False
+                self.LOCK_FLAG = True
+                #On efface les lignes du diagramme précédent
+
+                self.w.delete("lines")
+                self.w.delete("poly")
+
+                #Selection de la stratégie du bot #
+                if self.strategy ==0:
+                    self.random_place()
+
+                elif self.strategy ==1:
+                    self.BonnePioche_place()
+
+                elif self.strategy ==2:
+                    self.AntiGagnant_place()
+
+                elif self.strategy ==3:
+                    self.DBC_place()
+
+                #On calcule le diagramme de Voronoi
+                vp = self.get_vp()
+                lines = vp.get_output()
+
+
+
+                #Actualisation du score du joueur et du bot #
+
+                self.score_user = int(1000*vp.player.score/(vp.bot.score + vp.player.score+1))/10
+                self.score_bot = int(1000*vp.bot.score/(vp.bot.score + vp.player.score+1))/10
+
+                self.score_user_variable.set(f'Score Joueur: {self.score_user}%')
+                self.score_bot_variable.set(f'Score Bot: {self.score_bot}%')
+
+                #Tracer du diagramme de Voronoï
+                self.drawPolygonOnCanvas(vp)
+                self.drawLinesOnCanvas(lines)
+
+
+                #Incrémentation du compteur de tour
+                self.count += 1
+
+                self.LOCK_FLAG = False
+
+                if self.count == 5:
+                    self.check_winner()
+
+
+        #Mode de jeu 2 joueurs
+        else:
+
+            if self.count == 10:
+                self.check_winner()
+
+            #On décide de la couleur du point en fonction du tour
+            if self.count%2 == 0 and not self.LOCK_FLAG:
+                self.w.create_oval(event.x-self.RADIUS, event.y-self.RADIUS, event.x+self.RADIUS, event.y+self.RADIUS, fill= "red")
+
+            if self.count%2 == 1 and not self.LOCK_FLAG:
+                self.w.create_oval(event.x-self.RADIUS, event.y-self.RADIUS, event.x+self.RADIUS, event.y+self.RADIUS, fill= "blue")
+
+            self.LOCK_FLAG = True
+
+            #On efface les lignes du diagramme précédent
+
+            self.w.delete("lines")
+            self.w.delete("poly")
+
+            #On calcule le diagramme de Voronoi
+            vp = self.get_vp()
+            lines = vp.get_output()
+
+            #Actualisation du score des joueurs
+            self.score_user = int(1000*vp.player.score/(vp.bot.score + vp.player.score+1))/10
+            self.score_bot = int(1000*vp.bot.score/(vp.bot.score + vp.player.score+1))/10
+
+            self.score_user_variable.set(f'Score Joueur 1: {self.score_user}%')
+            self.score_bot_variable.set(f'Score Joueur 2: {self.score_bot}%')
+
+
+            #Tracer du diagramme de Voronoï
+            self.drawPolygonOnCanvas(vp)
+            self.drawLinesOnCanvas(lines)
+
+
+            #Incrémentation du compteur de tour
+            self.count += 1
+
+            self.LOCK_FLAG = False
+
+            if self.count == 10:
+                self.check_winner()
+
+
+
 
     def drawLinesOnCanvas(self, lines):
+
         for l in lines:
-            self.w.create_line(l[0], l[1], l[2], l[3], fill='black', tags="lines")
+            self.w.create_line(l[0], l[1], l[2], l[3],width = 2, tags="lines")
+
+    def drawPolygonOnCanvas(self,vp):
+
+
+        for single_pol in vp.player.polygons:
+            pol_trace = list(itertools.chain(single_pol))
+            self.w.create_polygon(pol_trace, fill = "red", stipple='gray50', tags = "poly")
+
+        for single_pol in vp.bot.polygons:
+            pol_trace = list(itertools.chain(single_pol))
+            self.w.create_polygon(pol_trace, fill = "blue", stipple='gray50', tags = "poly")
+
+
+
+    def check_winner(self):
+
+        if self.game_mode == 0:
+            if self.score_user > self.score_bot:
+                self.w.create_text(250, 300, text="Le joueur a gagné", fill="red", font=('Helvetica 15 bold'))
+                self.w.pack()
+
+            elif self.score_user < self.score_bot:
+                self.w.create_text(250, 300, text="L'ordinateur a gagné'", fill="blue", font=('Helvetica 15 bold'))
+                self.w.pack()
+
+            else:
+                self.w.create_text(250, 300, text="Egalité'", fill="black", font=('Helvetica 15 bold'))
+                self.w.pack()
+
+
+        #Si on a deux joueurs le texte affiché en fin de partie doit changer
+        if self.game_mode == 1:
+            if self.score_user > self.score_bot:
+                self.w.create_text(250, 300, text="Le Joueur rouge a gagné", fill="red", font=('Helvetica 15 bold'))
+                self.w.pack()
+
+            elif self.score_user < self.score_bot:
+                self.w.create_text(250, 300, text="Le Joueur bleu a gagné", fill="blue", font=('Helvetica 15 bold'))
+                self.w.pack()
+
+            else:
+                self.w.create_text(250, 300, text="Egalité'", fill="black", font=('Helvetica 15 bold'))
+                self.w.pack()
+
+
+
+
+
+def polygon_area(coords):
+    # On récupère les coordonnées x,y des sommets
+    x = [point[0] for point in coords]
+    y = [point[1] for point in coords]
+    # On les décale par rapport au centre du polygone
+    x_ = x - np.mean(x)
+    y_ = y - np.mean(y)
+    # On calcul l'aire via la formule du papillon
+    correction = x_[-1] * y_[0] - y_[-1] * x_[0]
+    main_area = np.dot(x_[:-1], y_[1:]) - np.dot(y_[:-1], x_[1:])
+    return 0.5 * np.abs(main_area + correction)
+
+def area(list_coords):
+    return np.sum([polygon_area(coords) for coords in list_coords])
+
+
+
+def sort(pol):
+    for single_pol in pol:
+        cent=(sum([p[0] for p in single_pol])/len(single_pol),sum([p[1] for p in single_pol])/len(single_pol))
+        single_pol.sort(key=lambda p: math.atan2(p[1]-cent[1],p[0]-cent[0]))
+    return pol
+
 
 
 
